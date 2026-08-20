@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+.vercel/
+*.log
+
+# Ключ сервисного аккаунта — в репозиторий не попадает никогда.
+service-account.json
+*-firebase-adminsdk-*.json
+
+# Локальные mp3 — только кэш генератора. Источник правды — бакет и manifest.json.
+public/audio/*.mp3

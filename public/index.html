@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vio — учимся читать по-английски</title>
+<meta name="description" content="Фоникс для русскоязычных семей: от звуков к первым книжкам за 12 недель.">
+<meta name="theme-color" content="#FFF8EC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Read with me">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-row">
+      <div class="logo">
+        <svg class="mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="3" y="7" width="42" height="34" rx="9" fill="#FFD43B"/>
+          <path d="M24 13v22" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M9 15h11a4 4 0 0 1 4 4v16a4 4 0 0 0-4-4H9z" fill="#fff"/>
+          <path d="M39 15H28a4 4 0 0 0-4 4v16a4 4 0 0 1 4-4h11z" fill="#fff"/>
+          <circle cx="15" cy="23" r="2.2" fill="#FF4D6D"/>
+          <circle cx="33" cy="23" r="2.2" fill="#3D7BFF"/>
+        </svg>
+        Read <b>with</b> me
+      </div>
+      <div class="grow"></div>
+      <button class="icn on" id="mute" title="Звук" aria-label="Звук">🔊</button>
+      <button class="icn" id="gear" title="Голос" aria-label="Настройки голоса">⚙︎</button>
+    </div>
+    <nav class="segs" id="segs"></nav>
+  </div>
+</header>
+
+<main class="wrap" id="panes"></main>
+<div id="printsheet"></div>
+<p class="foot">Столбики → спиннер → рассказ. 15 минут в день.</p>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" aria-label="Настройки голоса">
+  <div class="grab"></div>
+  <h2 class="sec">🎙 Голос</h2>
+  <p class="sub">Слова читает <b>Joana</b> — живой голос ElevenLabs. Озвучка записана заранее и лежит в хранилище проекта: ключи никуда вводить не нужно, а пройденный набор дальше работает без интернета.</p>
+
+  <div class="rowlbl">Скорость чтения</div>
+  <input class="slider" id="rate" type="range" min="60" max="115" value="85">
+  <p class="hint" id="ratelbl"></p>
+
+  <div class="bar" style="justify-content:flex-start;margin-top:19px">
+    <button class="btn" id="test">Проверить</button>
+    <button class="btn soft sm" id="close">Закрыть</button>
+  </div>
+  <div class="stat" id="stat"></div>
+
+  <div class="rowlbl">Важно про звуки</div>
+  <p class="hint" style="margin-top:6px">Озвучиваются только целые слова и строки. Отдельные звуки — /k/, /t/, /æ/ — любой синтез читает как названия букв («си», «ти»), и это сломало бы метод. Звуки произносит взрослый по подсказкам в карточке набора.</p>
+</aside>
+
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>

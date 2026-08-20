@@ -1,0 +1,18 @@
+{
+  "name": "vio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read with me — фоникс для русскоязычных семей: от звуков к первым книжкам за 12 недель.",
+  "scripts": {
+    "audio": "node scripts/generate-audio.mjs",
+    "audio:dry": "node scripts/generate-audio.mjs --dry",
+    "dev": "python3 -m http.server 5173 --directory public",
+    "start": "npm run dev",
+    "deploy": "firebase deploy --only hosting"
+  },
+  "devDependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "engines": { "node": ">=18" }
+}
