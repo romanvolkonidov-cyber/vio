@@ -1,7 +1,7 @@
 // Офлайн-кэш. Приложение и вся озвучка работают без интернета после первого захода.
 // Озвучка живёт в Cloud Storage, поэтому кэшируем и чужой origin — иначе
 // каждое слово каждый раз ходило бы в сеть.
-const CACHE = 'vio-v2';
+const CACHE = 'vio-v3';
 const AUDIO_HOST = 'storage.googleapis.com';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',

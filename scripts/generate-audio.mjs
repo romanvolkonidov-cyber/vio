@@ -64,7 +64,7 @@ const PREFIX    = 'audio/';
 // он тянет длительность, не трогая высоту голоса. Это заметно чище, чем
 // playbackRate в браузере, который растягивает уже на лету, на каждом слове.
 const API_SPEED_FLOOR = 0.7;
-const SPEED     = Math.min(1.2, Math.max(0.3, Number(value('speed', 1)) || 1));
+const SPEED     = Math.min(1.2, Math.max(0.3, Number(value('speed', 0.7)) || 0.7));
 const API_SPEED = Math.max(SPEED, API_SPEED_FLOOR);
 const STRETCH   = SPEED < API_SPEED_FLOOR ? SPEED / API_SPEED_FLOOR : 1;
 const PARALLEL  = Math.max(1, Number(value('parallel', 3)) || 3);
@@ -83,7 +83,7 @@ const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27, eleven
 // записанную кем-то другим, и полкурса осталось бы старым голосом.
 const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0, n);
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
-const nameOf = t => `${slug(t)}-${sha(`${t}@${VOICE}@${MODEL}@${SPEED}`, 6)}`;
+const nameOf = k => `${slug(k)}-${sha(`${k}@${VOICE}@${MODEL}@${SPEED}`, 6)}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ElevenLabs возвращает списанное на каждый ответ — считаем по факту, а не по оценке.
@@ -166,6 +166,36 @@ function clean(buffer){
   }
 }
 
+/**
+ * Растянутая копия для слияния. Ребёнок должен услышать, как звуки перетекают
+ * друг в друга — «сссаааат», — а не готовое слово: слияние и есть тот навык,
+ * ради которого метод называется синтетическим.
+ *
+ * Тянем уже готовую запись, а не просим синтез ещё раз: во-первых, ElevenLabs
+ * ниже 0,7 всё равно не пойдёт, во-вторых, так это ничего не стоит.
+ */
+const BLEND_TEMPO = 0.5;
+
+function stretchForBlend(buffer){
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vio-blend-'));
+  const at = n => path.join(dir, n);
+  try {
+    fs.writeFileSync(at('in.mp3'), buffer);
+    execFileSync('ffmpeg', ['-y', '-i', at('in.mp3'), '-af',
+      `rubberband=tempo=${BLEND_TEMPO}:pitchq=quality`, at('s.wav')], { stdio: 'ignore' });
+    const probe = spawnSync('ffmpeg', ['-i', at('s.wav'), '-af', 'volumedetect', '-f', 'null', '-'],
+      { encoding: 'utf8' }).stderr;
+    const mean = parseFloat(probe.match(/mean_volume:\s*(-?[\d.]+)/)[1]);
+    const peak = parseFloat(probe.match(/max_volume:\s*(-?[\d.]+)/)[1]);
+    const gain = Math.min(TARGET_MEAN_DB - mean, PEAK_CEILING_DB - peak);
+    execFileSync('ffmpeg', ['-y', '-i', at('s.wav'), '-af', `volume=${gain.toFixed(2)}dB`,
+      '-c:a', 'libmp3lame', '-q:a', '4', at('out.mp3')], { stdio: 'ignore' });
+    return fs.readFileSync(at('out.mp3'));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 async function openBucket(){
   const { initializeApp, applicationDefault, cert } = await import('firebase-admin/app');
   const { getStorage } = await import('firebase-admin/storage');
@@ -194,8 +224,9 @@ async function ensureCors(bucket){
 }
 
 async function main(){
-  const { collectPhrases } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
-  const phrases = collectPhrases();
+  const { collectAudio } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
+  // Слияние делается из обычной записи того же слова, поэтому идёт последним.
+  const phrases = collectAudio().sort((a, b) => (a.kind === 'blend') - (b.kind === 'blend'));
 
   await fsp.mkdir(OUT_DIR, { recursive: true });
   let manifest = {};
@@ -224,17 +255,20 @@ async function main(){
   }
   const objectOf = url => { try { return decodeURIComponent(new URL(url).pathname.split(`/${BUCKET}/`)[1] || ''); } catch { return ''; } };
 
-  const plan = phrases.filter(t => {
-    const url = manifest[t];
+  const plan = phrases.filter(j => {
+    const url = manifest[j.key];
     if (!url) return true;
     return bucket ? !inBucket.has(objectOf(url)) : false;
   }).slice(0, LIMIT);
 
-  const chars   = plan.reduce((s, t) => s + t.length, 0);
+  // Растянутые копии кредитов не стоят — в оценку не идут.
+  const chars   = plan.filter(j => j.kind !== 'blend').reduce((s, j) => s + j.text.length, 0);
   const credits = Math.round(chars * (CREDITS_PER_CHAR[MODEL] ?? 1));
   if (restyled) console.log(`Голос или темп изменились: ${restyled}\n  → переозвучиваем всё.\n`);
-  console.log(`Фраз всего:      ${phrases.length}`);
-  console.log(`Нужно озвучить:  ${plan.length}  (${chars} символов)`);
+  const count = k => plan.filter(j => j.kind === k).length;
+  console.log(`Записей всего:   ${phrases.length}`);
+  console.log(`Нужно сделать:   ${plan.length}  (${chars} символов через API)`);
+  console.log(`  из них слов:   ${count('speech')} · звуков: ${count('sound')} · слияний: ${count('blend')} (бесплатно)`);
   console.log(`Модель / голос:  ${MODEL} / ${VOICE}`);
   console.log(`Темп:            ${SPEED}×` + (STRETCH !== 1
     ? `  (ElevenLabs ${API_SPEED}× + rubberband ${STRETCH.toFixed(3)}×)` : '  (нативно у модели)'));
@@ -249,37 +283,57 @@ async function main(){
   const write = () => fsp.writeFile(MANIFEST, JSON.stringify(
     { voice: VOICE, model: MODEL, speed: SPEED, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
 
-  async function one(text){
-    const local = path.join(OUT_DIR, nameOf(text) + '.mp3');
+  /** Исходник для слияния: сначала соседний файл, иначе тянем из бакета. */
+  async function sourceFor(word){
+    const local = path.join(OUT_DIR, nameOf(word) + '.mp3');
+    if (fs.existsSync(local)) return fsp.readFile(local);
+    const url = manifest[word];
+    if (url) {
+      const r = await fetch(url);
+      if (r.ok) return Buffer.from(await r.arrayBuffer());
+    }
+    // Слова ещё нет — запишем его сейчас, слияние соберётся из свежей записи.
+    const buffer = clean(await tts(word));
+    await fsp.writeFile(local, buffer);
+    return buffer;
+  }
+
+  async function one(job){
+    const local = path.join(OUT_DIR, nameOf(job.key) + '.mp3');
     let buffer;
     // Локальная копия — кэш. Файл пропал из бакета, но лежит рядом? Заливаем
     // его же, без нового запроса: кредиты тратим только на реально новое.
     if (!FORCE && fs.existsSync(local)) buffer = await fsp.readFile(local);
-    else { buffer = clean(await tts(text)); await fsp.writeFile(local, buffer); }
+    else {
+      buffer = job.kind === 'blend'
+        ? stretchForBlend(await sourceFor(job.text))
+        : clean(await tts(job.text));
+      await fsp.writeFile(local, buffer);
+    }
 
-    const object = `${PREFIX}${nameOf(text)}-${sha(buffer, 8)}.mp3`;
+    const object = `${PREFIX}${nameOf(job.key)}-${sha(buffer, 8)}.mp3`;
     const f = bucket.file(object);
     if (!inBucket.has(object)) {
       await f.save(buffer, { metadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } });
       await f.makePublic();
     }
-    manifest[text] = `https://storage.googleapis.com/${BUCKET}/${object}`;
+    manifest[job.key] = `https://storage.googleapis.com/${BUCKET}/${object}`;
   }
 
   // Пишем манифест по ходу: обрыв связи не теряет уже оплаченное.
   const queue = [...plan];
   await Promise.all(Array.from({ length: Math.min(PARALLEL, queue.length) }, async () => {
     while (queue.length) {
-      const text = queue.shift();
+      const job = queue.shift();
       try {
-        await one(text);
+        await one(job);
         done++;
-        process.stdout.write(`\r  ${done}/${plan.length}  ${text.slice(0, 40).padEnd(42)}`);
+        process.stdout.write(`\r  ${done}/${plan.length}  ${job.key.slice(0, 40).padEnd(42)}`);
         await write();
       } catch (e) {
-        failed.push({ text, error: e.message });
+        failed.push({ text: job.key, error: e.message });
       }
-      await sleep(120);
+      await sleep(job.kind === 'blend' ? 0 : 120);
     }
   }));
   if (plan.length) console.log('\n');
@@ -306,7 +360,7 @@ async function main(){
     console.warn(`Не получилось: ${failed.length}. Запустите скрипт ещё раз — догенерирует.`);
     failed.slice(0, 5).forEach(f => console.warn(`  · "${f.text}" — ${f.error}`));
   }
-  console.log(`Готово. Озвучено фраз: ${Object.keys(manifest).length} из ${phrases.length}. Списано кредитов: ${spent}.`);
+  console.log(`Готово. Записей: ${Object.keys(manifest).length} из ${phrases.length}. Списано кредитов: ${spent}.`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

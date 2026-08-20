@@ -252,3 +252,57 @@ select.fld{appearance:none;cursor:pointer}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .foot{text-align:center;color:var(--ink3);font-size:13.5px;padding:28px 16px 8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ==================== ЗВУК НА ФИШКЕ НАБОРА ==================== */
+/* Тянущиеся звуки можно послушать, взрывные — нет: без гласной они не
+   произносятся, и синтез даёт «пэ», «кэ». Их говорит взрослый, и фишка
+   помечена «вы», чтобы это было видно сразу, а не выяснялось нажатием. */
+.chip.say{ cursor:pointer; font:inherit; text-align:center; border:0; }
+.chip u{ display:block; text-decoration:none; font-size:11px; line-height:1.2; margin-top:2px; opacity:.75; }
+.chip u.mute{ font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; opacity:.45; }
+.chip.say:hover{ transform:translateY(-2px); }
+.chip.say:active{ transform:translateY(0); }
+
+/* ==================== ОТМЕТКА БЕГЛОСТИ ==================== */
+.fluent{
+  margin-top:7px; width:100%; border:1.5px dashed var(--hair); background:transparent;
+  color:var(--ink2); border-radius:11px; padding:7px 0; font:inherit; font-size:13px;
+  font-weight:700; cursor:pointer;
+}
+.fluent:hover{ border-color:var(--c,#22C55E); color:var(--ink); }
+.fluent.on{ border-style:solid; border-color:#22C55E; background:#E6F9ED; color:#12A150; }
+.col.done .chead{ opacity:.62; }
+
+/* ==================== МАРШРУТ: ЖИВЫЕ КЛЕТКИ ==================== */
+.wk .wbar{ height:4px; border-radius:99px; background:var(--hair); margin-top:8px; overflow:hidden; }
+.wk .wbar i{ display:block; height:100%; width:0; border-radius:99px; background:#22C55E; transition:width .35s; }
+.wk .wnum{ font-size:10.5px; color:var(--ink2); margin-top:4px; font-variant-numeric:tabular-nums; }
+.wk.done{ border-color:#22C55E; background:#F2FCF6; }
+.wk.done .n{ color:#12A150; }
+
+/* ==================== ВОПРОСЫ К ТЕКСТУ ==================== */
+.qs .qq{
+  background:none; border:0; padding:0; font:inherit; font-size:inherit; color:var(--ink);
+  cursor:pointer; text-align:left; border-bottom:1.5px dotted var(--hair);
+}
+.qs .qq:hover{ color:var(--blue); border-bottom-color:var(--blue); }
+.qs .qru{ display:block; font-size:13px; color:var(--ink2); margin-top:2px; }
+.qs li{ margin-bottom:9px; }
+
+/* ==================== ТРЕНИРОВКА ==================== */
+.dbig{
+  font-size:clamp(38px,9vw,62px); font-weight:700; text-align:center; letter-spacing:.02em;
+  margin:16px 0 14px; color:var(--ink); min-height:1.2em;
+}
+.dbig.hide{ color:transparent; text-shadow:0 0 18px rgba(0,0,0,.22); user-select:none; }
+.pickrow{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 4px; }
+.dpair{ display:flex; flex-wrap:wrap; gap:11px; justify-content:center; margin:16px 0 6px; }
+.pwbtn{
+  flex:1 1 150px; max-width:230px; font:inherit; font-size:clamp(24px,5.4vw,34px); font-weight:700;
+  padding:16px 10px; border-radius:16px; border:2px solid var(--hair); background:var(--card);
+  color:var(--ink); cursor:pointer;
+}
+.pwbtn:hover:not(:disabled){ border-color:var(--blue); transform:translateY(-2px); }
+.pwbtn:disabled{ cursor:default; }
+.pwbtn.ok{ border-color:#22C55E; background:#E6F9ED; color:#12A150; }
+.pwbtn.no{ border-color:#FF4D6D; background:#FFE8ED; color:#E0245E; }

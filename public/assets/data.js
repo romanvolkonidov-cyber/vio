@@ -15,7 +15,7 @@ export const GROUPS = [
   spin:W('sat pat pan tap tan nap sap sit sip pit pin tip tin nip'),
   story:{ t:'Text 1 · Nan and Pip', art:'pan',
     l:['Nan sat.','Pip sat.','','Nan taps a pan.','Pip taps a tin.','Tap, tap, tap!','','Nan naps.','Pip naps.'],
-    k:W('a'), q:['Who taps a pan?','Who taps a tin?','What do Nan and Pip do at the end?'] } },
+    k:W('a'), q:['Who taps a pan?','Who taps a tin?','What do Nan and Pip do at the end?'], qRu:['Кто стучит по кастрюле?','Кто стучит по банке?','Что Нэн и Пип делают в конце?'] } },
 
 { id:'set2', nav:'2 · m d g o c k', c:'#22C55E', soft:'#E6F9ED', kind:'g', art:'dog',
   num:'Набор 2', title:'m · d · g · o · c · k',
@@ -28,7 +28,7 @@ export const GROUPS = [
   spin:W('mad map man mat dad dam gap gas cat can cap tag nag sad sag did dig dip dim pig kid kit tin pin sit tip sip pit nip dot dog cod cot got top pot pop mop nod cop cog'),
   story:{ t:'Text 2 · Tom the Cat', art:'cat',
     l:['Tom is a cat.','Tom sat on a mat.','','Dad got a map.','Dad got a cap.','','Tom naps on the map!','"Tom! It is not a mat!"','Tom is mad.'],
-    k:W('is a the'), q:['Who is Tom?','What did Dad get?','Where does Tom nap?','Is Tom glad or mad?'] } },
+    k:W('is a the'), q:['Who is Tom?','What did Dad get?','Where does Tom nap?','Is Tom glad or mad?'], qRu:['Кто такой Том?','Что взял папа?','Где Том засыпает?','Том рад или сердит?'] } },
 
 { id:'set3', nav:'3 · ck e u r h b f l', c:'#FF9F1C', soft:'#FFF3E0', kind:'g', art:'bug',
   num:'Набор 3', title:'ck · e · u · r · h · b · f · l',
@@ -44,7 +44,7 @@ export const GROUPS = [
   spin:W('bad bag bat cab lad had ham hat fan fat ran rag rat back pack sack rack bed red leg ten net pet get hen beg den fed led met set let peg neck peck deck big bit dig fig fit hid him hip hit lid lip lit rib rid rip kick pick lick sick tick cod cop cot dog fog hog hop hot log lot rob rod rock lock sock dock bug bun bus but cub cup cut dug fun gum hug hum hut mud mug nut rub rug run sun tub duck luck tuck'),
   story:{ t:'Text 3 · The Bug in the Mug', art:'bug',
     l:['Ben has a red mug.','A bug is in the mug!','','"Get up, bug!"','The bug is not sad.','The bug sits in the mug.','','Ben gets a big cup.','The bug hops in the cup.','Ben and the bug run and run.'],
-    k:W('a the is has and'), q:['What is in the mug?','Is the bug sad?','What does Ben get?'] } },
+    k:W('a the is has and'), q:['What is in the mug?','Is the bug sad?','What does Ben get?'], qRu:['Кто сидит в кружке?','Жучку грустно?','Что берёт Бен?'] } },
 
 { id:'set4', nav:'4 · j v w x y z qu', c:'#A855F7', soft:'#F4EAFE', kind:'g', art:'duck',
   num:'Набор 4', title:'j · v · w · x · y · z · qu  +  FLOSS',
@@ -62,7 +62,7 @@ export const GROUPS = [
   spin:W('jam jab jag wag yam yak zap zag van wax jet vet web wed yes yet vex zip zig wig win wit fix six mix jig job jog jot box fox jug jut yum quiz quit quack buzz fizz jazz bell well tell fill hill doll miss kiss less mess off puff cuff'),
   story:{ t:'Text 4 · Fun in the Sun', art:'duck',
     l:['It is hot. The sun is up.','Jack and Jill run up a hill.','','Jack has a stick.','Jill has a red box.','','A duck sits on a log.','Quack! Quack!','The duck runs off.','','Jack and Jill run back.','It was fun!'],
-    k:W('the a was has and'), q:['Where do Jack and Jill run?','What has Jill got?','Who says "Quack"?'] } },
+    k:W('the a was has and'), q:['Where do Jack and Jill run?','What has Jill got?','Who says "Quack"?'], qRu:['Куда бегут Джек и Джилл?','Что у Джилл в руках?','Кто говорит «кря»?'] } },
 
 { id:'th', nav:'5 · th', c:'#FF4D6D', soft:'#FFEBEF', kind:'g', art:'moth',
   num:'Диграф 1', title:'th  =  /θ/ и /ð/',
@@ -75,7 +75,7 @@ export const GROUPS = [
   spin:W('thin thick think thank thud thug this that them then than bath math path moth with cloth froth'),
   story:{ t:'Text 5 · Beth and Seth', art:'moth',
     l:['Beth and Seth run on a path.','The path is thin.','','"This is fun!" said Beth.','"That moth is big!" said Seth.','','The moth sits on a cloth.','Beth and Seth think.','Then... the moth is off!'],
-    k:W('the a said then'), q:['Where do Beth and Seth run?','What is on the cloth?','Is the moth still there?'] } },
+    k:W('the a said then'), q:['Where do Beth and Seth run?','What is on the cloth?','Is the moth still there?'], qRu:['Где бегут Бет и Сет?','Кто сидит на тряпке?','Мотылёк всё ещё там?'] } },
 
 { id:'ch', nav:'6 · ch', c:'#06B6D4', soft:'#E4F8FC', kind:'g', art:'chick',
   num:'Диграф 2', title:'ch  =  /tʃ/',
@@ -87,7 +87,7 @@ export const GROUPS = [
   spin:W('chat chap chin chip chop chug chum chick check chess chill much such rich lunch munch bench catch match fetch ditch'),
   story:{ t:'Text 6 · Lunch', art:'chick',
     l:['It is lunch.','Chad sits on a bench.','','Chad has chips.','Munch, munch, munch!','','A chick runs up.','"Chip! Chip!"','"Catch it!" said Josh.','','Chad gets the chick a chip.','Such fun!'],
-    k:W('it a the said'), q:['Where does Chad sit?','What has Chad got?','Who runs up?'] } },
+    k:W('it a the said'), q:['Where does Chad sit?','What has Chad got?','Who runs up?'], qRu:['Где сидит Чад?','Что у Чада с собой?','Кто прибегает?'] } },
 
 { id:'sh', nav:'7 · sh', c:'#FF6FB5', soft:'#FFEBF5', kind:'g', art:'fish',
   num:'Диграф 3', title:'sh  =  /ʃ/',
@@ -99,7 +99,7 @@ export const GROUPS = [
   spin:W('ship shin shed shop shot shut shell shall shock shrug fish dish wish cash dash rash mash mesh posh rush hush gush'),
   story:{ t:'Text 7 · The Shop', art:'fish',
     l:['Josh has a shop.','The shop has fish and ham.','','Nan runs in.','"I wish for a fish!"','','Josh got a big dish.','The fish is in the dish.','"Cash!" said Josh.','','Nan is not sad. Nan is glad!'],
-    k:W('the a I for said'), q:['What has the shop got?','What does Nan wish for?','Is Nan sad or glad?'] } },
+    k:W('the a I for said'), q:['What has the shop got?','What does Nan wish for?','Is Nan sad or glad?'], qRu:['Что продаётся в лавке?','Чего хочет Нэн?','Нэн расстроена или рада?'] } },
 
 { id:'ph', nav:'8 · ph', c:'#84CC16', soft:'#F0FADF', kind:'ph', art:'ship',
   num:'Диграф 4', title:'ph  =  /f/',
@@ -108,10 +108,10 @@ export const GROUPS = [
   wall:W('Phil phone photo graph phonics dolphin elephant alphabet phrase'),
   story:{ t:'Text 8 · Phil and the Photo', art:'ship',
     l:['Phil has a photo.','The photo is of a big ship.','','"Is this Dad?" said Phil.','"Yes! That is Dad on the ship," said Mum.','','Phil is glad.','Phil puts the photo on his desk.'],
-    k:W('a the of is this said his puts'), q:['What is on the photo?','Who is on the ship?','Where does Phil put it?'] },
+    k:W('a the of is this said his puts'), q:['What is on the photo?','Who is on the ship?','Where does Phil put it?'], qRu:['Что на фотографии?','Кто на корабле?','Куда Фил ставит фото?'] },
   story2:{ t:'Text 9 · Fish and Chips — все диграфы вместе', art:'fish',
     l:['Josh has a big fish.','The fish is on a dish.','Chad has hot chips.','Munch, munch, munch!','','"This fish is thick," said Josh.','"That chip is hot!" said Chad.','','Then a cat ran in.','The cat got the fish!','Dash! The cat is off.','','Josh and Chad had chips for lunch.'],
-    k:W('the a said then for had'), q:['What has Josh got?','Who got the fish?','What did they have for lunch?'] } },
+    k:W('the a said then for had'), q:['What has Josh got?','Who got the fish?','What did they have for lunch?'], qRu:['Что поймал Джош?','Кто утащил рыбу?','Что они ели на обед?'] } },
 
 { id:'me', nav:'9 · Немая e', c:'#FF8A4C', soft:'#FFF0E6', kind:'me', art:'kite',
   num:'Финал', title:'Немая e',
@@ -130,10 +130,12 @@ export const GROUPS = [
     cols:[['✗','',W('have give live come some love done gone none one')]] },
   story:{ t:'Text 10 · Mike and the Kite', art:'kite',
     l:['Mike has a red bike.','Kate has a big kite.','','"Ride with me!" said Mike.','The kite is up. Up, up, up!','','Mike rides. Kate runs.','Then it is time to go home.','','Kate ate a cake.','Mike ate a cake.','What a fine time!'],
-    k:W('said the to go what a'), q:['Who has a bike?','Who has a kite?','What do they eat?'] },
+    k:W('said the to go what a'), q:['Who has a bike?','Who has a kite?','What do they eat?'], qRu:['У кого велосипед?','У кого воздушный змей?','Что они едят?'] },
   story2:{ t:'Text 12 · A Fine Trip — финал курса', art:'cake',
     l:['Beth and Phil made a plan.','"Let us take the bike to the lake!"','','Beth got a big bag.','In the bag: a cake, chips and a dish.','','At the lake, Beth and Phil ate the cake.','Phil got a shell. The shell is thin and white.','Beth got a fish in a net.','','"This is a fine fish!" said Beth.','"That is a thin shell!" said Phil.','','Then it was time to go home.','Beth and Phil rode back.','"What a fine time!"'],
-    k:W('the a and said was to go what'), q:['Where did they go?','What was in the bag?','Who got a shell?','Was it a fine trip?'] } },
+    k:W('the a and said was to go what'), q:['Where did they go?','What was in the bag?','Who got a shell?','Was it a fine trip?'], qRu:['Куда они поехали?','Что было в сумке?','Кто нашёл ракушку?','Хорошая вышла поездка?'] } },
+
+{ id:'drill', nav:'🎯 Тренировка', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },
 
 { id:'cards', nav:'🖨 Карточки', c:'#6E7691', kind:'cards', art:'cards' }
 ];
@@ -153,6 +155,64 @@ export const CARDS = [
  ['Немая e','a_e','cake','🎂',1],['Немая e','i_e','kite','🪁',1],['Немая e','o_e','bone','🦴',1],
  ['Немая e','u_e','cube','🧊',1],['Немая e','e_e','Pete','🧑',1]
 ];
+
+/* ==================== ЗВУКИ ГОЛОСОМ ====================
+   Синтез умеет тянуть только те звуки, которые тянутся голосом. Взрывные
+   /p/ /b/ /t/ /d/ /k/ /g/ сюда не входят принципиально: без гласной они не
+   произносятся, и любая попытка даёт «пэ», «кэ» — ровно ту ошибку, против
+   которой построен курс. Их по-прежнему говорит взрослый по подсказке.
+
+   Ключ — транскрипция, а не буква: у th два разных звука и одна буква.
+   Долгие гласные немой e ставятся надёжнее всего: там гласная и правда
+   называет своё имя, так что для них хватает обычного слова. */
+export const VOICED_SOUNDS = {
+  // тянутся голосом, синтез берёт их чисто
+  '/s/':'sssss', '/m/':'mmmmm', '/n/':'nnnnn', '/f/':'fffff', '/l/':'lllll',
+  '/z/':'zzzzz', '/v/':'vvvvv', '/ʃ/':'shhhhh',
+  // сложнее, но обычно выходит
+  '/r/':'rrrrr', '/h/':'hhhhh', '/θ/':'thhhhh',
+  // краткие гласные — самые нужные русскоязычному ребёнку и самые капризные
+  '/æ/':'aaaaa', '/e/':'ehhhh', '/ɪ/':'ihhhh', '/ɒ/':'ohhhh', '/ʌ/':'uhhhh',
+  // немая e: гласная называет своё имя
+  '/eɪ/':'ay', '/aɪ/':'eye', '/əʊ/':'oh', '/juː/':'you', '/iː/':'ee',
+};
+
+/* ==================== ПАРЫ ГЛАСНЫХ ====================
+   У русскоязычных детей /æ/, /e/ и /ʌ/ схлопываются в один звук — это прямо
+   названо трудностью в наборе 3 и до сих пор нигде не отрабатывалось.
+   Слышит ребёнок разницу или нет, видно только на минимальных парах: два
+   слова, отличающиеся ровно одной гласной. */
+export const MIN_PAIRS = [
+  { t:'/æ/ — /e/', a:'/æ/', b:'/e/', hint:'Рот шире для /æ/. «bad» — челюсть вниз, «bed» — уже.',
+    p:[['bad','bed'],['bat','bet'],['pat','pet'],['sat','set'],['tan','ten'],['lad','led']] },
+  { t:'/æ/ — /ʌ/', a:'/æ/', b:'/ʌ/', hint:'/æ/ — рот широко и вперёд, /ʌ/ — коротко и глубже.',
+    p:[['cat','cut'],['bat','but'],['hat','hut'],['cap','cup'],['ran','run'],['bad','bud']] },
+  { t:'/e/ — /ɪ/', a:'/e/', b:'/ɪ/', hint:'/e/ — как русское «э», /ɪ/ — короткий, расслабленный.',
+    p:[['bed','bid'],['pen','pin'],['bet','bit'],['led','lid'],['ten','tin'],['beg','big']] },
+  { t:'/ɒ/ — /ʌ/', a:'/ɒ/', b:'/ʌ/', hint:'/ɒ/ — губы кружком, /ʌ/ — губы расслаблены.',
+    p:[['cot','cut'],['hot','hut'],['lock','luck'],['not','nut'],['dog','dug'],['pot','put']] },
+];
+
+/** Слова-обманщики: правило на них не работает, их берут узнаванием. */
+export function trickyWords(){
+  const out = new Set();
+  for (const g of GROUPS){
+    [g.story, g.story2].forEach(st => (st?.k || []).forEach(w => out.add(w)));
+    if (g.id === 'me') (g.extra?.cols || []).forEach(c => c[2].forEach(w => out.add(w)));
+  }
+  return [...out];
+}
+
+/** Слова для диктанта и повтора: всё, что читается по столбикам и барабанам. */
+export function drillWords(gid){
+  const out = new Set();
+  for (const g of GROUPS){
+    (g.spin || []).forEach(w => out.add(w));
+    (g.cols || []).forEach(c => c[2].forEach(w => out.add(w)));
+    if (g.id === gid) break;
+  }
+  return [...out];
+}
 
 // Всё, что должно быть озвучено. Используется и приложением, и скриптом генерации.
 /** Всё, что озвучивается внутри одного набора. */
@@ -180,4 +240,32 @@ export function collectPhrases(){
   const out = new Set(EXTRA_SAY);
   for (const g of GROUPS) for (const t of phrasesOf(g)) out.add(t);
   return [...out];
+}
+
+/**
+ * Полный наряд для скрипта генерации. Ключ — то, чем запись зовётся в
+ * манифесте, text — то, что уходит в синтез.
+ *
+ *   speech — обычная запись;
+ *   blend  — то же слово, растянутое вдвое для слияния. Делается из готовой
+ *            записи через rubberband, к API не обращается и кредитов не стоит;
+ *   sound  — отдельный звук, из тех, что тянутся голосом.
+ */
+export function collectAudio(){
+  const jobs = new Map();
+  const add = (key, text, kind) => { if (!jobs.has(key)) jobs.set(key, { key, text, kind }); };
+
+  for (const t of collectPhrases()) add(t, t, 'speech');
+  for (const w of trickyWords()) add(w, w, 'speech');
+  for (const grp of MIN_PAIRS) for (const [a, b] of grp.p) {
+    add(a, a, 'speech'); add(b, b, 'speech'); add(`${a}, ${b}`, `${a}, ${b}`, 'speech');
+  }
+  for (const g of GROUPS) for (const st of [g.story, g.story2])
+    (st?.q || []).forEach(q => add(q, q, 'speech'));
+
+  // Слияние тренируют на односложных словах из барабанов — их и растягиваем.
+  for (const g of GROUPS) (g.spin || []).forEach(w => add('blend:' + w, w, 'blend'));
+
+  for (const [ipa, text] of Object.entries(VOICED_SOUNDS)) add('sound:' + ipa, text, 'sound');
+  return [...jobs.values()];
 }

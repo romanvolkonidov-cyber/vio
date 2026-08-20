@@ -1,4 +1,4 @@
-import { GROUPS, CARDS, phrasesOf, EXTRA_SAY } from './data.js';
+import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, VOICED_SOUNDS, MIN_PAIRS, trickyWords, drillWords } from './data.js';
 import { art } from './art.js';
 
 /* ==================== СОСТОЯНИЕ ==================== */
@@ -7,6 +7,7 @@ const LS = {
   set(k, v){ try{ localStorage.setItem('vio.'+k, JSON.stringify(v)); }catch(e){} }
 };
 let seen = {}, audioOn = true, rate = 1;
+let fluent = new Set();   // столбики, отмеченные родителем как беглые
 let MANIFEST = null;                       // {текст: URL в Cloud Storage} из audio/manifest.json
 let BAKED = 1;                             // темп, с которым записаны файлы — из манифеста
 let player = null, timer = null, actx = null;
@@ -15,6 +16,47 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 function saveSeen(){ const o={}; for(const k in seen) o[k]=[...seen[k]]; LS.set('seen',o); }
+
+/* ==================== БЕГЛОСТЬ ====================
+   Касание слова — это не владение. Курс построен на трёх проходах до беглости,
+   и услышать её может только взрослый, который сидит рядом. Поэтому отметку
+   ставит он, а маршрут на 12 недель считает по ней, а не по кликам. */
+const colsOf = g => [
+  ...(g.cols||[]).map(c => g.id+'/'+c[0]),
+  ...(g.extra?.cols||[]).map(c => g.id+'+/'+c[0]),
+];
+function toggleFluent(id){
+  fluent.has(id) ? fluent.delete(id) : fluent.add(id);
+  LS.set('fluent', [...fluent]);
+  paintFluent();
+}
+function paintFluent(){
+  document.querySelectorAll('[data-fluent]').forEach(b=>{
+    const on = fluent.has(b.dataset.fluent);
+    b.classList.toggle('on', on); b.textContent = on ? '✓ Бегло' : 'Бегло';
+    b.closest('.col')?.classList.toggle('done', on);
+  });
+  paintWeeks();
+}
+function weekState(gid){
+  if(gid==='drill'){
+    const base = GROUPS.filter(g=>['set1','set2','set3','set4'].includes(g.id)).flatMap(colsOf);
+    return [base.filter(c=>fluent.has(c)).length, base.length];
+  }
+  const g = GROUPS.find(x=>x.id===gid); if(!g) return [0,0];
+  const cs = colsOf(g);
+  return [cs.filter(c=>fluent.has(c)).length, cs.length];
+}
+function paintWeeks(){
+  document.querySelectorAll('[data-week]').forEach(el=>{
+    const [n,total] = weekState(el.dataset.week);
+    const bar = el.querySelector('.wbar i'), lab = el.querySelector('.wnum');
+    if(!total){ if(lab) lab.textContent=''; return; }
+    if(bar) bar.style.width = Math.round(n/total*100)+'%';
+    if(lab) lab.textContent = n+' / '+total;
+    el.classList.toggle('done', n===total);
+  });
+}
 
 /* ==================== АУДИО ====================
    Озвучка собрана заранее (npm run audio) и лежит в Cloud Storage. Здесь ключей
@@ -37,11 +79,45 @@ function browserSay(t){
 }
 function playUrl(u){ stopAudio(); player = new Audio(u); player.playbackRate = rate; player.play().catch(()=>{}); }
 
-function speak(text){
-  if(!audioOn || !text) return;
+function speak(text){ speakDone(text); }
+
+/** То же, что speak, но возвращает обещание, которое ждёт конца записи. */
+function speakDone(text){
+  if(!audioOn || !text) return Promise.resolve();
   const key = text.trim();
   const url = MANIFEST && MANIFEST[key];
-  if(url) playUrl(url); else browserSay(key);
+  if(!url){ browserSay(key); return new Promise(r=>setTimeout(r, 380 + key.length*55)); }
+  return new Promise(res=>{
+    stopAudio();
+    player = new Audio(url);
+    player.playbackRate = rate;
+    const done = () => res();
+    player.addEventListener('ended', done);
+    player.addEventListener('error', done);
+    player.play().catch(done);
+  });
+}
+
+/** Слово, растянутое для слияния: сначала «сссаааат», потом обычное. */
+function speakBlend(word){
+  const slow = MANIFEST && MANIFEST['blend:'+word];
+  if(!slow) return speakDone(word);
+  return new Promise(res=>{
+    stopAudio();
+    player = new Audio(slow);
+    player.playbackRate = rate;
+    const next = () => { setTimeout(()=>speakDone(word).then(res), 260); };
+    player.addEventListener('ended', next);
+    player.addEventListener('error', next);
+    player.play().catch(next);
+  });
+}
+
+/** Отдельный звук — только те, что тянутся голосом; взрывные говорит взрослый. */
+function speakSound(ipa){
+  const url = MANIFEST && MANIFEST['sound:'+ipa];
+  if(url) playUrl(url);
+  return !!url;
 }
 
 /* Столбик подсвечивает слова по очереди и держит темп — ждать сеть на каждом
@@ -56,6 +132,31 @@ function warm(id){
   let i = 0;
   const next = () => { const u = urls[i++]; if(u) fetch(u).catch(()=>{}).then(next); };
   for(let k = 0; k < 4; k++) next();
+}
+
+/* Прогон по столбику ждёт конца записи, а не тикает по таймеру.
+   Фиксированный интервал держался только на том, что слова короткие: стоит
+   сменить темп или добавить длинную строку — и записи начнут накладываться. */
+let walkStop = null;
+function stopWalk(){
+  if(walkStop){ walkStop(); walkStop=null; }
+  clearInterval(timer);
+  document.querySelectorAll('.lit').forEach(e=>e.classList.remove('lit'));
+}
+function walkThrough(items, textOf, gap, onEnd){
+  let i=0, cancelled=false;
+  walkStop = () => { cancelled=true; };
+  const step = async () => {
+    document.querySelectorAll('.lit').forEach(e=>e.classList.remove('lit'));
+    if(cancelled) return;
+    if(i>=items.length){ walkStop=null; onEnd && onEnd(); return; }
+    const el = items[i++];
+    el.classList.add('lit');
+    await speakDone(textOf(el));
+    if(cancelled) return;
+    setTimeout(step, gap);
+  };
+  step();
 }
 
 function tick(){
@@ -74,8 +175,14 @@ function tick(){
 
 /* ==================== РАЗБОР СЛОВА ==================== */
 const V='aeiou';
+/* Делим слово на onset / гласную / конец — в том порядке, в каком его читают.
+   qu приходится оговаривать отдельно: u здесь формально гласная, и поиск
+   первой гласной резал слово как q|u|iz, хотя карточка набора 4 прямо учит,
+   что qu — «всегда вдвоём». Диграфы ch, th, sh ловятся сами: у них вторая
+   буква согласная, и поиск через них проходит. */
 function split(w){
-  let i=1; while(i<w.length && V.indexOf(w[i].toLowerCase())<0) i++;
+  const start = /^qu/i.test(w) ? 2 : 1;
+  let i=start; while(i<w.length && V.indexOf(w[i].toLowerCase())<0) i++;
   if(i>=w.length){ i=0; while(i<w.length && V.indexOf(w[i].toLowerCase())<0) i++; }
   return [w.slice(0,i), w[i]||'', w.slice(i+1)];
 }
@@ -89,7 +196,10 @@ GROUPS.forEach(g => {
   b.onclick = () => show(g.id); segs.appendChild(b);
   const p = document.createElement('section');
   p.className='pane'; p.id='x-'+g.id;
-  p.innerHTML = g.kind==='start' ? startHTML() : g.kind==='cards' ? cardsHTML() : groupHTML(g);
+  p.innerHTML = g.kind==='start' ? startHTML()
+              : g.kind==='cards' ? cardsHTML()
+              : g.kind==='drill' ? drillHTML()
+              : groupHTML(g);
   panes.appendChild(p);
 });
 
@@ -97,7 +207,7 @@ function show(id){
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='x-'+id));
   document.querySelectorAll('.seg').forEach(s=>s.classList.toggle('on',s.dataset.go===id));
   const s=document.querySelector('.seg.on'); if(s) s.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
-  window.scrollTo({top:0,behavior:'smooth'}); stopAudio(); clearInterval(timer);
+  window.scrollTo({top:0,behavior:'smooth'}); stopAudio(); stopWalk();
   LS.set('tab', id); warm(id);
 }
 
@@ -157,11 +267,14 @@ function startHTML(){ return `
 <div class="card">
   <h2 class="sec"><span class="emo">🗓</span> Маршрут на 12 недель</h2>
   <div class="weeks">
-    ${[['1','Набор 1','Text 1'],['2','Набор 2','Text 2'],['3–4','Набор 3','Text 3'],['5','Набор 4','Text 4'],
-       ['6','Повтор 1–4','проверка'],['7–8','th','Text 5'],['9','ch','Text 6'],['10','sh','Text 7'],
-       ['11','ph','Text 8–9'],['12','Немая e','Text 10–12']]
-      .map(([n,t,x])=>`<div class="wk"><div class="n">${n} нед.</div><div class="t">${t}</div><div class="x">${x}</div></div>`).join('')}
+    ${[['1','Набор 1','Text 1','set1'],['2','Набор 2','Text 2','set2'],['3–4','Набор 3','Text 3','set3'],
+       ['5','Набор 4','Text 4','set4'],['6','Повтор 1–4','проверка','drill'],['7–8','th','Text 5','th'],
+       ['9','ch','Text 6','ch'],['10','sh','Text 7','sh'],['11','ph','Text 8–9','ph'],
+       ['12','Немая e','Text 10–12','me']]
+      .map(([n,t,x,gid])=>`<div class="wk" data-week="${gid}"><div class="n">${n} нед.</div><div class="t">${t}</div>`+
+        `<div class="x">${x}</div><div class="wbar"><i></i></div><div class="wnum"></div></div>`).join('')}
   </div>
+  <p class="hint" style="margin-bottom:10px">Клетка закрашивается, когда все столбики набора отмечены «бегло» — отметку ставите вы, кнопкой под столбиком. Клики ребёнка сюда не считаются: их слишком легко набрать, не читая.</p>
   <p class="hint"><b>th стоит первым среди диграфов намеренно</b> — этого звука нет в русском, ему нужно больше всего времени. Если через две недели он не звучит, идите дальше к <span class="en">ch</span>, а <span class="en">th</span> держите разминкой по 30 секунд перед занятием. Застревание на <span class="en">th</span> — главная причина, по которой семьи бросают фоникс.</p>
 </div>`; }
 
@@ -173,12 +286,16 @@ function groupHTML(g){
       <h1 class="big en">${esc(g.title)}</h1>
       <p class="sub">${esc(g.lead)}</p>
     </div>
-    <div class="chips">${g.sounds.map(([l,i])=>`<div class="chip" style="--c:${g.c}"><b class="en">${esc(l)}</b><i>${esc(i)}</i></div>`).join('')}</div>
+    <div class="chips">${g.sounds.map(([l,i])=>{
+      const has = !!VOICED_SOUNDS[i];
+      return `<${has?'button':'div'} class="chip${has?' say':''}" style="--c:${g.c}"${has?` data-sound="${esc(i)}"`:''}>`+
+        `<b class="en">${esc(l)}</b><i>${esc(i)}</i>${has?'<u>🔊</u>':'<u class="mute">вы</u>'}</${has?'button':'div'}>`;
+    }).join('')}</div>
     <div class="artic">${g.sounds.map(([l,i,t])=>`<b>${esc(l)}</b> — ${esc(t)}`).join(' · ')}</div>
   </div>`;
   if(g.cols) h += `<div class="card"><h2 class="sec"><span class="emo">📊</span> Слова · читаем столбиками</h2>
-    <p class="sub" style="margin-bottom:11px">Три прохода по каждому столбику, и только потом — строками.</p>${colsHTML(g.cols)}</div>`;
-  if(g.extra) h += `<div class="card"><h2 class="sec">${esc(g.extra.t)}</h2>${colsHTML(g.extra.cols)}</div>`;
+    <p class="sub" style="margin-bottom:11px">Три прохода по каждому столбику, и только потом — строками.</p>${colsHTML(g.cols, g.id)}</div>`;
+  if(g.extra) h += `<div class="card"><h2 class="sec">${esc(g.extra.t)}</h2>${colsHTML(g.extra.cols, g.id+'+')}</div>`;
   if(g.wall) h += `<div class="card"><h2 class="sec"><span class="emo">🔤</span> Стена слов</h2>
     <p class="sub" style="margin-bottom:13px">Спиннера здесь нет: слова с <span class="en">ph</span> длиннее CVC, их берут целиком. Нажмите — прозвучит.</p>
     <div class="wall">${g.wall.map(w=>`<button class="pill" data-say="${esc(w)}">${w.replace(/([Pp])h/,'<u>$1h</u>')}</button>`).join('')}</div></div>`;
@@ -191,10 +308,11 @@ function groupHTML(g){
 /* Панели строятся сразу при загрузке модуля, до этих строк, поэтому здесь
    объявления функций, а не const-стрелки: стрелка в этот момент ещё в
    временной мёртвой зоне, и первый же набор со столбиками рушил всю отрисовку. */
-function colsHTML(cols){ return `<div class="cols">${cols.map(([head,ipa,ws])=>`<div class="col">
+function colsHTML(cols, gid){ return `<div class="cols">${cols.map(([head,ipa,ws])=>`<div class="col" data-col="${esc(gid+'/'+head)}">
   <div class="chead"><span class="en">${esc(head)}</span>${ipa?`<i>${esc(ipa)}</i>`:''}</div>
   ${ws.map(w=>`<button class="word en" data-say="${esc(w)}">${esc(w)}</button>`).join('')}
-  <button class="walk" data-walk>▶ Пройти</button></div>`).join('')}</div>`; }
+  <button class="walk" data-walk>▶ Пройти</button>
+  <button class="fluent" data-fluent="${esc(gid+'/'+head)}">Бегло</button></div>`).join('')}</div>`; }
 
 function spinHTML(g){ return `<div class="spin" data-spin="${g.id}">
   <div class="kick" style="--c:${g.c}">Тренажёр слов</div>
@@ -232,7 +350,8 @@ function storyHTML(s){ return `<div class="card story">
   <div style="margin:13px 0 0">${s.l.map(l=>l===''?'<div class="gap"></div>':
     `<button class="ln en" data-say="${esc(l.replace(/"/g,''))}">${esc(l)}</button>`).join('')}</div>
   <div class="trk"><span class="l">Хитрецы</span>${s.k.map(t=>`<span class="tw2 en">${esc(t)}</span>`).join('')}</div>
-  <ol class="qs">${s.q.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
+  <ol class="qs">${s.q.map((q,i)=>`<li><button class="qq en" data-say="${esc(q)}">${esc(q)}</button>`+
+    `${s.qRu&&s.qRu[i]?`<span class="qru">${esc(s.qRu[i])}</span>`:''}</li>`).join('')}</ol>
   <div class="bar" style="justify-content:flex-start"><button class="btn soft sm" data-read>▶ Прочитать вслух</button></div></div>`; }
 
 function cardsHTML(){
@@ -328,13 +447,20 @@ function initSpin(box){
     await roll(tiles[i],pools[i],np[i],860);
     showBig(np); settle(w); busy=false;
   }
-  function blend(w){
-    const parts=split(w); let i=0;
+  /* Слияние — тот самый навык, ради которого метод называется синтетическим.
+     Раньше кнопка только двигала CSS и произносила готовое слово: ребёнок
+     видел подсветку и запоминал слово картинкой. Теперь под подсветку идёт
+     растянутая запись — «сссаааат», — а следом слово в обычном темпе. */
+  const clearParts = () => { pips.forEach(p=>p.classList.remove('a')); tiles.forEach(t=>t.style.transform=''); };
+  async function blend(w){
+    let i=0;
     const step=()=>{
-      pips.forEach(p=>p.classList.remove('a')); tiles.forEach(t=>t.style.transform='');
-      if(i<3){ pips[i].classList.add('a'); tiles[i].style.transform='translateY(-7px) scale(1.06)'; i++; setTimeout(step,700); }
-      else { bigEl.classList.remove('bump'); void bigEl.offsetWidth; bigEl.classList.add('bump'); speak(w); }
+      clearParts();
+      if(i<3){ pips[i].classList.add('a'); tiles[i].style.transform='translateY(-7px) scale(1.06)'; i++; setTimeout(step,470); }
     }; step();
+    await speakBlend(w);
+    clearParts();
+    bigEl.classList.remove('bump'); void bigEl.offsetWidth; bigEl.classList.add('bump');
   }
 
   box.addEventListener('click', ev=>{
@@ -379,6 +505,12 @@ function initPair(box){
 
 /* ==================== ГЛОБАЛЬНЫЕ КЛИКИ ==================== */
 document.addEventListener('click', ev=>{
+  const snd = ev.target.closest('[data-sound]');
+  if(snd) speakSound(snd.dataset.sound);
+
+  const fl = ev.target.closest('[data-fluent]');
+  if(fl) toggleFluent(fl.dataset.fluent);
+
   const s = ev.target.closest('[data-say]');
   if(s){ speak(s.dataset.say);
     if(s.classList.contains('word')) s.classList.add('done');
@@ -386,21 +518,15 @@ document.addEventListener('click', ev=>{
 
   const wb = ev.target.closest('[data-walk]');
   if(wb){ const col=wb.closest('.col'), ws=[...col.querySelectorAll('.word')];
-    clearInterval(timer); ws.forEach(w=>w.classList.remove('lit'));
+    stopWalk();
     if(wb.dataset.on){ wb.dataset.on=''; wb.textContent='▶ Пройти'; return; }
     document.querySelectorAll('[data-walk]').forEach(b=>{b.dataset.on='';b.textContent='▶ Пройти';});
-    wb.dataset.on='1'; wb.textContent='⏸ Стоп'; let i=0;
-    const t=()=>{ ws.forEach(w=>w.classList.remove('lit'));
-      if(i>=ws.length){ clearInterval(timer); wb.dataset.on=''; wb.textContent='▶ Пройти'; return; }
-      ws[i].classList.add('lit'); speak(ws[i].textContent); i++; };
-    t(); timer=setInterval(t,2600); }
+    wb.dataset.on='1'; wb.textContent='⏸ Стоп';
+    walkThrough(ws, w=>w.textContent, 900, ()=>{ wb.dataset.on=''; wb.textContent='▶ Пройти'; }); }
 
   const rd = ev.target.closest('[data-read]');
-  if(rd){ const ls=[...rd.closest('.story').querySelectorAll('.ln')]; clearInterval(timer); let i=0;
-    const t=()=>{ ls.forEach(l=>l.classList.remove('lit'));
-      if(i>=ls.length){ clearInterval(timer); return; }
-      ls[i].classList.add('lit'); speak(ls[i].dataset.say); i++; };
-    t(); timer=setInterval(t,3300); }
+  if(rd){ const ls=[...rd.closest('.story').querySelectorAll('.ln')];
+    stopWalk(); walkThrough(ls, l=>l.dataset.say, 1100); }
 
   const pk = ev.target.closest('[data-set]');
   if(pk){ pk.classList.toggle('on'); renderCards(); }
@@ -415,6 +541,176 @@ function renderCards(){
   if(g) g.innerHTML = list.map(([a,l,w,e,v])=>`<div class="fc"><div class="e">${e}</div><div class="l en ${v?'v':''}">${esc(l)}</div><div class="w en">${esc(w)}</div></div>`).join('');
   document.getElementById('printsheet').innerHTML = '<div class="pg">' + list.map(([a,l,w,e])=>
     `<div class="pc"><div class="e">${e}</div><div class="l">${esc(l)}</div><div class="w">${esc(w)}</div></div>`).join('') + '</div>';
+}
+
+
+/* ==================== ТРЕНИРОВКА ====================
+   Четыре упражнения, которых курсу не хватало: повтор вперемешку (столбик
+   читается по инерции — ребёнок уже знает, что здесь везде /æ/), обманщики
+   (самые частые слова английского, правило на них не работает), диктант
+   (обратная операция закрепляет чтение быстрее, чем повторное чтение) и
+   пары гласных (у русскоязычных /æ/, /e/ и /ʌ/ схлопываются в один звук). */
+function drillHTML(){
+  return `
+<div class="card hero" style="--t:#E0F4FE;--c:#0EA5E9">
+  ${art('bug')}
+  <div class="inner">
+    <div class="kick">Тренировка</div>
+    <h1 class="big">Четыре упражнения между наборами</h1>
+    <p class="sub">Берите по одному в конце занятия, две-три минуты. Шестая неделя маршрута — это целиком повтор вперемешку.</p>
+  </div>
+</div>
+
+<div class="card" data-drill="review">
+  <h2 class="sec"><span class="emo">🔀</span> Повтор вперемешку</h2>
+  <p class="sub">Слова из всех наборов сразу, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему.</p>
+  <div class="dbig en" data-word>—</div>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-d="next" style="background:#0EA5E9;box-shadow:0 5px 14px #0EA5E955">🔀 Новое слово</button>
+    <button class="btn soft sm" data-d="say">🔊 Проверить</button>
+    <button class="btn soft sm" data-d="blend">🐛 Слить</button>
+  </div>
+  <p class="hint">Сначала читает ребёнок, потом проверяем кнопкой. Не наоборот.</p>
+</div>
+
+<div class="card" data-drill="tricky">
+  <h2 class="sec"><span class="emo">🃏</span> Слова-обманщики</h2>
+  <p class="sub">Правило на них не работает — их берут узнаванием. Это самые частые слова языка: пока они не узнаются мгновенно, беглости не будет.</p>
+  <div class="dbig en" data-word>—</div>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-d="know" style="background:#22C55E;box-shadow:0 5px 14px #22C55E55">✓ Знает</button>
+    <button class="btn soft" data-d="again">↻ Ещё раз</button>
+    <button class="btn soft sm" data-d="say">🔊</button>
+  </div>
+  <div class="bank"><div class="bhead"><span class="t">Колода</span><span class="cnt" data-cnt></span>
+    <button class="re" data-d="reset">Сбросить</button></div>
+    <div class="bws" data-bank></div></div>
+</div>
+
+<div class="card" data-drill="dictation">
+  <h2 class="sec"><span class="emo">✍️</span> Диктант</h2>
+  <p class="sub">Слово звучит, ребёнок пишет на бумаге, потом сверяем. Обратная операция закрепляет чтение быстрее повторного чтения и сразу показывает, какой звук на самом деле не различается.</p>
+  <div class="dbig en hide" data-word>—</div>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-d="play" style="background:#A855F7;box-shadow:0 5px 14px #A855F755">🔊 Сказать слово</button>
+    <button class="btn soft" data-d="show">👁 Показать</button>
+    <button class="btn soft sm" data-d="next">Дальше</button>
+  </div>
+  <p class="hint">Кнопку «Показать» нажимает ребёнок сам — после того как написал.</p>
+</div>
+
+<div class="card" data-drill="pairs">
+  <h2 class="sec"><span class="emo">👂</span> Пары гласных</h2>
+  <p class="sub">Звучит одно слово из двух. Ребёнок выбирает, какое услышал. Здесь проверяется слух, а не чтение.</p>
+  <div class="pickrow" data-groups></div>
+  <div class="dpair" data-pairbox></div>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-d="play" style="background:#FF9F1C;box-shadow:0 5px 14px #FF9F1C55">🔊 Ещё раз</button>
+    <button class="btn soft" data-d="next">Новая пара</button>
+  </div>
+  <p class="hint" data-tip></p>
+  <p class="hint" data-score></p>
+</div>`;
+}
+
+function initDrill(root){
+  const rnd = a => a[Math.floor(Math.random()*a.length)];
+
+  /* — повтор вперемешку — */
+  (box => {
+    const el = box.querySelector('[data-word]');
+    const pool = drillWords('me');
+    let cur = null;
+    const next = () => { let w; do { w = rnd(pool); } while(w===cur && pool.length>1); cur=w; el.textContent=w; };
+    box.addEventListener('click', ev => {
+      const a = ev.target.closest('[data-d]')?.dataset.d;
+      if(a==='next') next();
+      if(a==='say' && cur) speak(cur);
+      if(a==='blend' && cur) speakBlend(cur);
+    });
+    next();
+  })(root.querySelector('[data-drill="review"]'));
+
+  /* — обманщики — */
+  (box => {
+    const el = box.querySelector('[data-word]'), bank = box.querySelector('[data-bank]');
+    const words = trickyWords();
+    let cur = null;
+    bank.innerHTML = words.map(w=>`<span class="bw en" data-bw="${esc(w)}">${esc(w)}</span>`).join('');
+    const paint = () => {
+      const s = got('tricky');
+      bank.querySelectorAll('.bw').forEach(e=>{
+        e.classList.toggle('seen', s.has(e.dataset.bw));
+        e.classList.toggle('now', e.dataset.bw===cur);
+      });
+      box.querySelector('[data-cnt]').textContent = s.size+' / '+words.length;
+    };
+    const next = () => {
+      const s = got('tricky');
+      const fresh = words.filter(w=>!s.has(w) && w!==cur);
+      cur = fresh.length ? rnd(fresh) : rnd(words.filter(w=>w!==cur).concat(words));
+      el.textContent = cur; paint(); speak(cur);
+    };
+    box.addEventListener('click', ev => {
+      const a = ev.target.closest('[data-d]')?.dataset.d;
+      if(a==='know' && cur){ got('tricky').add(cur); saveSeen(); next(); }
+      if(a==='again'){ got('tricky').delete(cur); saveSeen(); next(); }
+      if(a==='say' && cur) speak(cur);
+      if(a==='reset'){ seen['tricky']=new Set(); saveSeen(); paint(); }
+    });
+    next();
+  })(root.querySelector('[data-drill="tricky"]'));
+
+  /* — диктант — */
+  (box => {
+    const el = box.querySelector('[data-word]');
+    const pool = drillWords('me');
+    let cur = null;
+    const next = () => { cur = rnd(pool); el.textContent=cur; el.classList.add('hide'); speak(cur); };
+    box.addEventListener('click', ev => {
+      const a = ev.target.closest('[data-d]')?.dataset.d;
+      if(a==='play' && cur) speak(cur);
+      if(a==='show') el.classList.remove('hide');
+      if(a==='next') next();
+    });
+    next();
+  })(root.querySelector('[data-drill="dictation"]'));
+
+  /* — пары гласных — */
+  (box => {
+    const picks = box.querySelector('[data-groups]'), row = box.querySelector('[data-pairbox]');
+    const tip = box.querySelector('[data-tip]'), score = box.querySelector('[data-score]');
+    let gi = 0, pair = null, target = null, right = 0, total = 0;
+    picks.innerHTML = MIN_PAIRS.map((g,i)=>`<button class="pk${i?'':' on'} en" data-g="${i}">${esc(g.t)}</button>`).join('');
+    const next = () => {
+      const g = MIN_PAIRS[gi];
+      pair = rnd(g.p); target = rnd(pair);
+      tip.textContent = g.hint;
+      row.innerHTML = pair.map(w=>`<button class="pwbtn en" data-w="${esc(w)}">${esc(w)}</button>`).join('');
+      setTimeout(()=>speak(target), 260);
+    };
+    const mark = () => { score.textContent = total ? `Угадано ${right} из ${total}` : ''; };
+    box.addEventListener('click', ev => {
+      const g = ev.target.closest('[data-g]');
+      if(g){ gi=+g.dataset.g; picks.querySelectorAll('.pk').forEach((b,i)=>b.classList.toggle('on', i===gi));
+        right=0; total=0; mark(); next(); return; }
+      const w = ev.target.closest('[data-w]');
+      if(w && target){
+        total++; const ok = w.dataset.w===target;
+        if(ok) right++;
+        w.classList.add(ok?'ok':'no');
+        row.querySelectorAll('.pwbtn').forEach(b=>b.disabled=true);
+        if(!ok) row.querySelector(`[data-w="${CSS.escape(target)}"]`)?.classList.add('ok');
+        mark();
+        setTimeout(next, 1100);
+        return;
+      }
+      const a = ev.target.closest('[data-d]')?.dataset.d;
+      if(a==='play' && target) speak(target);
+      if(a==='next') next();
+    });
+    next();
+  })(root.querySelector('[data-drill="pairs"]'));
 }
 
 /* ==================== НАСТРОЙКИ ==================== */
@@ -444,6 +740,7 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
 /* ==================== СТАРТ ==================== */
 (async () => {
   const s = LS.get('seen',{}); for(const k in s) seen[k]=new Set(s[k]);
+  fluent = new Set(LS.get('fluent',[]));
   audioOn = LS.get('audio',true);
   rate    = LS.get('rate',1);
   $('rate').value = Math.round(rate*100);
@@ -465,7 +762,10 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   labelRate();
   document.querySelectorAll('[data-spin]').forEach(initSpin);
   document.querySelectorAll('[data-pair]').forEach(initPair);
+  const drillPane = document.getElementById('x-drill');
+  if(drillPane) initDrill(drillPane);
   renderCards();
+  paintFluent();
   show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'start');
 
   if(MANIFEST) setStat('Слова читает Sophia. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
