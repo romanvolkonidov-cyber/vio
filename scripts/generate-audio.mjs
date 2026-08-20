@@ -6,6 +6,8 @@
  *   npm run audio         сгенерировать недостающее и залить в бакет
  *   npm run audio -- --force    перегенерировать всё заново
  *   npm run audio -- --limit=3  проверить связку на трёх файлах
+ *   npm run audio -- --speed=0.6            темп чтения (1.0 — как говорит модель)
+ *   npm run audio -- --voice=<id> --force   сменить голос и перезаписать всё
  *
  * Что происходит:
  *   1. collectPhrases() из data.js даёт список всех озвучиваемых строк;
@@ -33,7 +35,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT     = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,23 +56,36 @@ const value = (n, d) => (argv.find(a => a.startsWith(`--${n}=`)) || `=${d}`).spl
 const API_KEY   = process.env.ELEVENLABS_API_KEY;
 const BUCKET    = value('bucket', process.env.FIREBASE_STORAGE_BUCKET || 'violet-3e5a8.firebasestorage.app');
 const PROJECT   = value('project', process.env.GOOGLE_CLOUD_PROJECT || 'violet-3e5a8');
-const VOICE     = value('voice', 'qQbLjdSnI72C56rrOF87');   // Joana
+const VOICE     = value('voice', 'LM5QaByxyWDmNhcQTYiS');   // Sophia — polished RP
 const MODEL     = value('model', 'eleven_multilingual_v2');
 const PREFIX    = 'audio/';
+// ElevenLabs принимает speed только от 0.7 до 1.2 — на 0.65 отвечает 400.
+// Всё, что медленнее, рендерим на 0.7 и дотягиваем rubberband при сборке:
+// он тянет длительность, не трогая высоту голоса. Это заметно чище, чем
+// playbackRate в браузере, который растягивает уже на лету, на каждом слове.
+const API_SPEED_FLOOR = 0.7;
+const SPEED     = Math.min(1.2, Math.max(0.3, Number(value('speed', 1)) || 1));
+const API_SPEED = Math.max(SPEED, API_SPEED_FLOOR);
+const STRETCH   = SPEED < API_SPEED_FLOOR ? SPEED / API_SPEED_FLOOR : 1;
 const PARALLEL  = Math.max(1, Number(value('parallel', 3)) || 3);
 const LIMIT     = Number(value('limit', 0)) || Infinity;   // проверить связку на паре файлов
 const DRY       = flag('dry');
 const FORCE     = flag('force');
 
-const CREDITS_PER_CHAR = { eleven_multilingual_v2: 1, eleven_v3: 1, eleven_flash_v2_5: 0.5, eleven_turbo_v2_5: 0.5 };
-const USD_PER_CREDIT   = 0.000364;   // по замеру: 58 кредитов ≈ $0.021
+// Замерено по заголовку character-cost, который приходит на каждый ответ:
+// 3 символа -> 1 кредит, 15 -> 4, 22 -> 6, 44 -> 12. То есть примерно 0,27
+// кредита на символ, а не 1. Точный счёт всё равно печатается по факту внизу.
+const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27, eleven_flash_v2_5: 0.14, eleven_turbo_v2_5: 0.14 };
 
 // Имя файла — читаемый слаг плюс хвост от хеша текста: слаг обрезан до 60
 // символов и без хвоста две разные строки рассказа могут дать одно имя.
 const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0, n);
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
-const nameOf = t => `${slug(t)}-${sha(t, 6)}`;
+const nameOf = t => `${slug(t)}-${sha(t + '@' + SPEED, 6)}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ElevenLabs возвращает списанное на каждый ответ — считаем по факту, а не по оценке.
+let spent = 0;
 
 async function tts(text, attempt = 1){
   const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`, {
@@ -82,7 +97,7 @@ async function tts(text, attempt = 1){
       // Учебное чтение хочет ровно и чётко, а не выразительно: низкая
       // стабильность заставляет модель «играть», и на одном коротком слове
       // это выходит как случайное ударение.
-      voice_settings: { stability: 0.8, similarity_boost: 0.85, style: 0, use_speaker_boost: true }
+      voice_settings: { stability: 0.8, similarity_boost: 0.85, style: 0, use_speaker_boost: false, speed: API_SPEED }
     })
   });
   if (!r.ok) {
@@ -92,18 +107,56 @@ async function tts(text, attempt = 1){
     }
     throw new Error(`HTTP ${r.status} ${(await r.text()).slice(0, 140)}`);
   }
+  spent += Number(r.headers.get('character-cost') || 0);
   return Buffer.from(await r.arrayBuffer());
 }
 
-/** Одна громкость на всю озвучку: разные фразы иначе звучат по-разному. */
-function normalize(buffer){
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vio-norm-'));
+/**
+ * Подрезать паузы по краям и выровнять громкость ОДНИМ статическим усилением.
+ *
+ * Здесь нельзя брать loudnorm, хотя он напрашивается. Слово «sat» длится 0,7 с
+ * и наполовину состоит из тишины, поэтому интегрированная громкость у него
+ * выходит −30 LUFS — не потому, что запись тихая, а потому, что короткая.
+ * loudnorm верит этой цифре, тянет до −16 LUFS, то есть добавляет +12…+20 дБ
+ * динамическим усилением, упирает пик в потолок и по дороге вытаскивает
+ * придыхание и шум кодека, а взрывные /p/ /t/ /k/ — расплющивает. Именно их
+ * метод и ставит, так что это была не мелочь, а порча материала.
+ *
+ * Средний уровень у всех фраз одного голоса и так лежит в пределах пары дБ,
+ * поэтому достаточно сдвинуть каждую к −24 дБ и проследить, чтобы пик не
+ * перевалил −1 дБ. Динамика остаётся нетронутой.
+ */
+const TARGET_MEAN_DB = -24;
+const PEAK_CEILING_DB = -1;
+
+function clean(buffer){
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vio-clean-'));
+  const at = n => path.join(dir, n);
   try {
-    const raw = path.join(dir, 'in.mp3'), out = path.join(dir, 'out.mp3');
-    fs.writeFileSync(raw, buffer);
-    execFileSync('ffmpeg', ['-y', '-i', raw, '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11',
-      '-c:a', 'libmp3lame', '-q:a', '4', out], { stdio: 'ignore' });
-    return fs.readFileSync(out);
+    fs.writeFileSync(at('in.mp3'), buffer);
+    let src = at('in.mp3');
+    if (STRETCH !== 1) {
+      execFileSync('ffmpeg', ['-y', '-i', src, '-af',
+        `rubberband=tempo=${STRETCH.toFixed(4)}:pitchq=quality`, at('r.wav')], { stdio: 'ignore' });
+      src = at('r.wav');
+    }
+    // ElevenLabs оставляет по полсекунды воздуха с обоих концов: слово по клику
+    // должно звучать сразу, а в столбике они идут подряд.
+    execFileSync('ffmpeg', ['-y', '-i', src, '-af',
+      'silenceremove=start_periods=1:start_silence=0.06:start_threshold=-45dB:detection=peak,' +
+      'areverse,silenceremove=start_periods=1:start_silence=0.10:start_threshold=-45dB:detection=peak,areverse',
+      at('t.wav')], { stdio: 'ignore' });
+
+    // volumedetect пишет в stderr, поэтому spawnSync.
+    const probe = spawnSync('ffmpeg', ['-i', at('t.wav'), '-af', 'volumedetect', '-f', 'null', '-'],
+      { encoding: 'utf8' }).stderr;
+    const mean = parseFloat(probe.match(/mean_volume:\s*(-?[\d.]+)/)[1]);
+    const peak = parseFloat(probe.match(/max_volume:\s*(-?[\d.]+)/)[1]);
+    const gain = Math.min(TARGET_MEAN_DB - mean, PEAK_CEILING_DB - peak);
+
+    execFileSync('ffmpeg', ['-y', '-i', at('t.wav'), '-af', `volume=${gain.toFixed(2)}dB`,
+      '-c:a', 'libmp3lame', '-q:a', '4', at('out.mp3')], { stdio: 'ignore' });
+    return fs.readFileSync(at('out.mp3'));
   } catch {
     return buffer;                      // без ffmpeg лучше неровный звук, чем никакого
   } finally {
@@ -144,7 +197,19 @@ async function main(){
 
   await fsp.mkdir(OUT_DIR, { recursive: true });
   let manifest = {};
-  if (!FORCE) { try { manifest = JSON.parse(await fsp.readFile(MANIFEST, 'utf8')).files || {}; } catch {} }
+  let restyled = null;
+  if (!FORCE) {
+    try {
+      const prev = JSON.parse(await fsp.readFile(MANIFEST, 'utf8'));
+      // Сменили голос, модель или темп — старые файлы больше не подходят, даже
+      // если текст тот же. Без этой проверки --dry честно скажет «всё готово»,
+      // и половина курса останется прежним голосом.
+      const was = `${prev.voice} ${prev.model} ${prev.speed ?? 1}`;
+      const now = `${VOICE} ${MODEL} ${SPEED}`;
+      if (was === now) manifest = prev.files || {};
+      else restyled = `${prev.voice} @ ${prev.speed ?? 1}× → ${VOICE} @ ${SPEED}×`;
+    } catch {}
+  }
 
   const bucket = DRY ? null : await openBucket();
   if (bucket) await ensureCors(bucket);
@@ -165,11 +230,14 @@ async function main(){
 
   const chars   = plan.reduce((s, t) => s + t.length, 0);
   const credits = Math.round(chars * (CREDITS_PER_CHAR[MODEL] ?? 1));
+  if (restyled) console.log(`Голос или темп изменились: ${restyled}\n  → переозвучиваем всё.\n`);
   console.log(`Фраз всего:      ${phrases.length}`);
   console.log(`Нужно озвучить:  ${plan.length}  (${chars} символов)`);
   console.log(`Модель / голос:  ${MODEL} / ${VOICE}`);
+  console.log(`Темп:            ${SPEED}×` + (STRETCH !== 1
+    ? `  (ElevenLabs ${API_SPEED}× + rubberband ${STRETCH.toFixed(3)}×)` : '  (нативно у модели)'));
   console.log(`Бакет:           gs://${BUCKET}/${PREFIX}`);
-  console.log(`Оценка:          ~${credits} кредитов ≈ $${(credits * USD_PER_CREDIT).toFixed(2)}\n`);
+  console.log(`Оценка:          ~${credits} кредитов\n`);
 
   if (DRY)          { console.log('--dry: ничего не сгенерировано.'); return; }
   if (!API_KEY && plan.length) { console.error('Нет ELEVENLABS_API_KEY. См. .env.example'); process.exit(1); }
@@ -177,7 +245,7 @@ async function main(){
   const failed = [];
   let done = 0;
   const write = () => fsp.writeFile(MANIFEST, JSON.stringify(
-    { voice: VOICE, model: MODEL, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
+    { voice: VOICE, model: MODEL, speed: SPEED, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
 
   async function one(text){
     const local = path.join(OUT_DIR, nameOf(text) + '.mp3');
@@ -185,7 +253,7 @@ async function main(){
     // Локальная копия — кэш. Файл пропал из бакета, но лежит рядом? Заливаем
     // его же, без нового запроса: кредиты тратим только на реально новое.
     if (!FORCE && fs.existsSync(local)) buffer = await fsp.readFile(local);
-    else { buffer = normalize(await tts(text)); await fsp.writeFile(local, buffer); }
+    else { buffer = clean(await tts(text)); await fsp.writeFile(local, buffer); }
 
     const object = `${PREFIX}${nameOf(text)}-${sha(buffer, 8)}.mp3`;
     const f = bucket.file(object);
@@ -222,17 +290,21 @@ async function main(){
   await mf.makePublic();
 
   // Чистим осиротевшее: перегенерация даёт новое имя, старое иначе копится.
-  const keep = new Set([...Object.values(manifest).map(objectOf), `${PREFIX}manifest.json`]);
-  const [now] = await bucket.getFiles({ prefix: PREFIX });
-  const stale = now.filter(f => !keep.has(f.name));
-  for (const f of stale) await f.delete().catch(() => {});
-  if (stale.length) console.log(`Удалено устаревших файлов в бакете: ${stale.length}`);
+  // Но только после полного прохода: при --limit манифест заведомо неполный,
+  // и уборка по нему снесла бы всё, что в этот раз просто не очередь.
+  if (LIMIT === Infinity && !failed.length) {
+    const keep = new Set([...Object.values(manifest).map(objectOf), `${PREFIX}manifest.json`]);
+    const [now] = await bucket.getFiles({ prefix: PREFIX });
+    const stale = now.filter(f => !keep.has(f.name));
+    for (const f of stale) await f.delete().catch(() => {});
+    if (stale.length) console.log(`Удалено устаревших файлов в бакете: ${stale.length}`);
+  }
 
   if (failed.length) {
     console.warn(`Не получилось: ${failed.length}. Запустите скрипт ещё раз — догенерирует.`);
     failed.slice(0, 5).forEach(f => console.warn(`  · "${f.text}" — ${f.error}`));
   }
-  console.log(`Готово. Озвучено фраз: ${Object.keys(manifest).length} из ${phrases.length}.`);
+  console.log(`Готово. Озвучено фраз: ${Object.keys(manifest).length} из ${phrases.length}. Списано кредитов: ${spent}.`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
