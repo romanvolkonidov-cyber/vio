@@ -6,8 +6,9 @@ const LS = {
   get(k, d){ try{ const v = localStorage.getItem('vio.'+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem('vio.'+k, JSON.stringify(v)); }catch(e){} }
 };
-let seen = {}, audioOn = true, rate = .85;
+let seen = {}, audioOn = true, rate = 1;
 let MANIFEST = null;                       // {текст: URL в Cloud Storage} из audio/manifest.json
+let BAKED = 1;                             // темп, с которым записаны файлы — из манифеста
 let player = null, timer = null, actx = null;
 const got = id => (seen[id] ||= new Set());
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -146,7 +147,7 @@ function startHTML(){ return `
     <p style="margin:8px 0 0">Спиннер собирает слова только из пройденных звуков — незнакомого не выпадет.</p></div></details>
   <details class="row"><summary><span class="emo">🔊</span> Как работает озвучка</summary>
     <div class="body">
-      <p style="margin:0 0 8px">Слова читает <b>Joana</b> — живой голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — в ⚙︎.</p>
+      <p style="margin:0 0 8px">Слова читает <b>Sophia</b> — живой голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — в ⚙︎.</p>
       <p style="margin:0"><b>Отдельные звуки не озвучиваются намеренно.</b> Синтез читает их как названия букв — «си» вместо /k/ — и это сломало бы метод. Звуки произносит взрослый по подсказкам в карточке набора.</p></div></details>
   <details class="row"><summary><span class="emo">🧩</span> Проверка: бессмысленные слова</summary>
     <div class="body"><p style="margin:0 0 8px">Если ребёнок читает выдуманные слова — он декодирует, а не угадывает. Скажите: «Это слова из языка роботов».</p>
@@ -427,16 +428,25 @@ function setStat(t,k){ const s=$('stat'); if(!s) return; s.textContent=t; s.clas
 $('mute').onclick = function(){ audioOn=!audioOn; this.classList.toggle('on',audioOn);
   this.textContent = audioOn?'🔊':'🔇'; if(!audioOn) stopAudio(); LS.set('audio',audioOn); };
 $('rate').oninput = function(){ rate=this.value/100; LS.set('rate',rate); labelRate(); };
-function labelRate(){ $('ratelbl').textContent = rate.toFixed(2)+'× — ' +
-  (rate<.75?'очень медленно':rate<.92?'медленно, для первых недель':'обычный темп'); }
+/* Файлы уже записаны медленнее обычной речи, поэтому подписываем не множитель
+   ползунка, а то, что получится на выходе — иначе «1,00×» читалось бы как
+   «обычный темп», хотя это совсем не он. */
+function labelRate(){
+  const eff = BAKED * rate;
+  $('ratelbl').textContent = eff.toFixed(2) + '× от обычной речи — ' +
+    (eff < .6 ? 'очень медленно, буква за буквой'
+     : eff < .78 ? 'темп занятия, как записано'
+     : eff < .95 ? 'бодрее, для беглого чтения'
+     : 'обычная речь');
+}
 $('test').onclick = () => speak(EXTRA_SAY[0]);
 
 /* ==================== СТАРТ ==================== */
 (async () => {
   const s = LS.get('seen',{}); for(const k in s) seen[k]=new Set(s[k]);
   audioOn = LS.get('audio',true);
-  rate    = LS.get('rate',.85);
-  $('rate').value = Math.round(rate*100); labelRate();
+  rate    = LS.get('rate',1);
+  $('rate').value = Math.round(rate*100);
   $('mute').classList.toggle('on',audioOn); $('mute').textContent = audioOn?'🔊':'🔇';
 
   // Свой манифест — тот, что уехал с деплоем; копия в бакете спасает, если
@@ -447,16 +457,18 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
       if(!r.ok) continue;
       const j = await r.json();
       MANIFEST = j.files || j;
+      BAKED = Number(j.speed) || 1;
       if(MANIFEST && Object.keys(MANIFEST).length) break;
     }catch(e){}
   }
 
+  labelRate();
   document.querySelectorAll('[data-spin]').forEach(initSpin);
   document.querySelectorAll('[data-pair]').forEach(initPair);
   renderCards();
   show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'start');
 
-  if(MANIFEST) setStat('Слова читает Joana. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
+  if(MANIFEST) setStat('Слова читает Sophia. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
   else setStat('Файлы озвучки не найдены — работает голос браузера. Соберите её: npm run audio.','err');
 
   try{ speechSynthesis.getVoices(); }catch(e){}
