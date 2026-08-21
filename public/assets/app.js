@@ -200,11 +200,13 @@ const panes = document.getElementById('panes'), segs = document.getElementById('
 
 GROUPS.forEach(g => {
   const b = document.createElement('button');
-  b.className='seg'; b.dataset.go=g.id; b.style.setProperty('--c',g.c); b.textContent=g.nav;
+  b.className='seg'; b.dataset.go=g.id; b.style.setProperty('--c',g.c);
+  b.innerHTML = g.sub ? `<span>${g.nav}</span><i class="en">${g.sub}</i>` : `<span>${g.nav}</span>`;
   b.onclick = () => show(g.id); segs.appendChild(b);
   const p = document.createElement('section');
   p.className='pane'; p.id='x-'+g.id;
-  p.innerHTML = g.kind==='start' ? startHTML()
+  p.innerHTML = g.kind==='today' ? ''
+              : g.kind==='start' ? startHTML()
               : g.kind==='cards' ? cardsHTML()
               : g.kind==='drill' ? drillHTML()
               : groupHTML(g);
@@ -217,6 +219,75 @@ function show(id){
   const s=document.querySelector('.seg.on'); if(s) s.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'}); stopAudio(); stopWalk();
   LS.set('tab', id); warm(id); markEnglish(document.getElementById('x-'+id));
+  if(id==='today') renderToday();
+  paintWeeks();
+}
+
+/* ==================== ЭКРАН «СЕГОДНЯ» ====================
+   Ничего не хранит: план целиком выводится из того, какие столбики уже
+   отмечены беглыми. Мама не выбирает, с чего начать, — ей это сказано. */
+function planNow(){
+  const order = GROUPS.filter(x => ['g','ph','me'].includes(x.kind));
+  let g = reachedGroup();
+  // набор закрыт целиком — ведём на следующий, иначе мама застрянет на месте
+  const closed = x => { const c = colsOf(x); return c.length && c.every(k => fluent.has(k)); };
+  while (closed(g)) {
+    const nxt = order[order.indexOf(g) + 1];
+    if (!nxt) break;
+    g = nxt;
+  }
+  const cols = colsOf(g);                        // ключи вида "set3/e"
+  const left = cols.filter(c => !fluent.has(c));
+  const col  = left[0] ? left[0].split('/').slice(1).join('/') : null;
+  const doneAll = cols.length && !left.length;
+  return { g, col, left: left.length, total: cols.length, doneAll };
+}
+function renderToday(){
+  const pane = document.getElementById('x-today'); if(!pane) return;
+  const { g, col, left, total, doneAll } = planNow();
+  const first = !LS.get('started', false);
+  const story = g.story ? g.story.t.split('·').slice(1).join('·').trim() : null;
+
+  const steps = [];
+  if(col) steps.push(['📊','Столбик <b class="en">'+esc(col)+'</b>','три прохода: медленно, быстрее, бегло']);
+  else    steps.push(['🔀','Повтор вперемешку','столбики закончились — проверьте их вразнобой']);
+  if(g.spin)  steps.push(['🎰','Спиннер','8–10 слов, ребёнок читает вслух']);
+  if(g.pairs) steps.push(['✨','Пары с немой e','короткое слово → добавили e → длинное']);
+  if(story)   steps.push(['📖',esc(story),'сначала читает ребёнок, потом слушаем Alice']);
+
+  pane.innerHTML = `
+<div class="card hero" style="--t:#E7F0FF;--c:#3D7BFF">
+  ${art('sun')}
+  <div class="inner">
+    <div class="kick">${first ? 'Начнём' : esc(g.nav)}</div>
+    <h1 class="big">${first ? 'Первое занятие — 15 минут' : 'Занятие на сегодня'}</h1>
+    <p class="sub">${first
+      ? 'Ребёнок учит не буквы, а звуки, и складывает из них слова. Всё, что нужно делать, приложение показывает по шагам.'
+      : esc(g.title) + ' · освоено столбиков: ' + (total-left) + ' из ' + total}</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="sec"><span class="emo">⏱</span> Что делаем</h2>
+  <ol class="plan">${steps.map(([e,a,b])=>
+    `<li><span class="pe">${e}</span><span><b>${a}</b><i>${b}</i></span></li>`).join('')}</ol>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-today="go">▶ Начать занятие</button>
+    ${first ? '' : '<button class="btn soft sm" data-today="drill">🎯 Тренировка</button>'}
+  </div>
+  ${doneAll ? '<p class="hint">Все столбики этого набора отмечены беглыми. Пройдите тренировку вперемешку — и переходите к следующей неделе.</p>' : ''}
+</div>
+
+<div class="list">
+  <details class="row"><summary><span class="emo">🔤</span> Три правила, без которых не работает</summary>
+    <div class="body"><ul>
+      <li><b>Звук, а не название буквы.</b> Не «эм», а /m/. Иначе <span class="en">cat</span> превратится в «си-эй-ти».</li>
+      <li><b>Без призвука «э».</b> Не «бэ», «дэ», «кэ» — резко и почти шёпотом.</li>
+      <li><b>Столбиками, а не строками.</b> В столбике одна гласная, меняются только согласные.</li>
+    </ul>
+    <p style="margin:8px 0 0">Не уверены в произношении — нажмите на слово, его прочитает Alice. Подробнее: вкладка «Как это работает».</p></div></details>
+</div>`;
+  markEnglish(pane);
 }
 
 function startHTML(){ return `
@@ -307,6 +378,10 @@ function groupHTML(g){
   if(g.pairs) h += pairHTML(g);
   if(g.story) h += storyHTML(g.story);
   if(g.story2) h += storyHTML(g.story2);
+  h += `<div class="card" style="text-align:center">
+    <h2 class="sec" style="justify-content:center"><span class="emo">✅</span> На сегодня всё</h2>
+    <p class="sub">Пятнадцати минут достаточно. Отметьте пройденный столбик кнопкой «Бегло» — и приложение само скажет, с чего начать завтра.</p>
+    <div class="bar"><button class="btn soft" data-finish>Закончить занятие</button></div></div>`;
   return h;
 }
 /* Панели строятся сразу при загрузке модуля, до этих строк, поэтому здесь
@@ -316,7 +391,8 @@ function colsHTML(cols, gid){ return `<div class="cols">${cols.map(([head,ipa,ws
   <div class="chead"><span class="en">${esc(head)}</span>${ipa?`<i>${esc(ipa)}</i>`:''}</div>
   ${ws.map(w=>`<button class="word en" data-say="${esc(w)}">${esc(w)}</button>`).join('')}
   <button class="walk" data-walk>▶ Пройти</button>
-  <button class="fluent" data-fluent="${esc(gid+'/'+head)}">Бегло</button></div>`).join('')}</div>`; }
+  <button class="fluent" data-fluent="${esc(gid+'/'+head)}">Бегло</button></div>`).join('')}</div>
+<p class="hint" style="margin-top:2px">Жмите «Бегло», когда столбик читается сверху вниз <b>и</b> снизу вверх без пауз. Это единственный признак, что пора дальше.</p>`; }
 
 function spinHTML(g){ return `<div class="spin" data-spin="${g.id}">
   <div class="kick" style="--c:${g.c}">Тренажёр слов</div>
@@ -532,6 +608,23 @@ function initPair(box){
 document.addEventListener('click', ev=>{
   const fl = ev.target.closest('[data-fluent]');
   if(fl) toggleFluent(fl.dataset.fluent);
+
+  const td = ev.target.closest('[data-today]');
+  if(td){
+    LS.set('started', true);
+    if(td.dataset.today==='drill') show('drill');
+    else {
+      const { g, col } = planNow();
+      show(g.id);
+      if(col) setTimeout(()=>{
+        const el = document.querySelector('[data-col="'+g.id+'/'+col+'"]');
+        if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); el.classList.add('aim');
+                setTimeout(()=>el.classList.remove('aim'), 2200); }
+      }, 360);
+    }
+  }
+  const fin = ev.target.closest('[data-finish]');
+  if(fin) show('today');
 
   const s = ev.target.closest('[data-say]');
   if(s){ speak(s.dataset.say);
@@ -818,7 +911,8 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   renderCards();
   paintFluent();
   markEnglish();          // после того, как отрисованы тренировка и карточки
-  show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'start');
+  renderToday();
+  show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'today');
 
   if(MANIFEST) setStat('Слова читает '+VOICE_NAME+'. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
   else setStat('Файлы озвучки не найдены — работает голос браузера. Соберите её: npm run audio.','err');

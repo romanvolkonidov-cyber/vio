@@ -11,3 +11,4 @@ service-account.json
 
 # Локальные mp3 — только кэш генератора. Источник правды — бакет и manifest.json.
 public/audio/*.mp3
+.firebase/
