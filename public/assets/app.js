@@ -509,11 +509,13 @@ function initPair(box){
   const fmt=(w,sil)=>{ const p=split(w);
     return `<span>${esc(p[0])}</span><span class="v">${esc(p[1])}</span>` +
       (sil?`<span>${esc(p[2].slice(0,-1))}</span><span class="se">e</span>`:`<span>${esc(p[2])}</span>`); };
-  const spin=()=>{ const s=got(id+'.p'); let pool=ps.filter(p=>!s.has(p[1])); if(!pool.length) pool=ps;
+  /* quiet — первый показ при загрузке страницы. Звук без нажатия пугает:
+     ребёнок ещё не открыл вкладку немой e, а из динамика уже слово. */
+  const spin=(quiet)=>{ const s=got(id+'.p'); let pool=ps.filter(p=>!s.has(p[1])); if(!pool.length) pool=ps;
     cur=pool[Math.floor(Math.random()*pool.length)];
     box.querySelector('[data-s]').innerHTML=fmt(cur[0],false);
     const L=box.querySelector('[data-l]'); L.innerHTML=fmt(cur[1],true); L.classList.add('off'); L.classList.remove('in');
-    paint(); speak(cur[0]); };
+    paint(); if(!quiet) speak(cur[0]); };
   box.addEventListener('click', ev=>{
     const p = ev.target.closest('[data-p]')?.dataset.p;
     if(p==='spin') spin();
@@ -523,7 +525,7 @@ function initPair(box){
     if(p==='say' && cur) speak(cur[0]+', '+cur[1]);
     if(p==='reset'){ seen[id+'.p']=new Set(); saveSeen(); paint(); }
   });
-  spin();
+  spin(true);
 }
 
 /* ==================== ГЛОБАЛЬНЫЕ КЛИКИ ==================== */
@@ -673,7 +675,7 @@ function initDrill(root){
       if(a==='say' && cur) speak(cur);
       if(a==='blend' && cur) speakBlend(cur);
     });
-    next();
+    next(true);
   })(root.querySelector('[data-drill="review"]'));
 
   /* — обманщики — */
@@ -690,11 +692,12 @@ function initDrill(root){
       });
       box.querySelector('[data-cnt]').textContent = s.size+' / '+words.length;
     };
-    const next = () => {
+    // quiet — первая карточка при загрузке страницы: показать, но не произносить
+    const next = (quiet) => {
       const s = got('tricky');
       const fresh = words.filter(w=>!s.has(w) && w!==cur);
       cur = fresh.length ? rnd(fresh) : rnd(words.filter(w=>w!==cur).concat(words));
-      el.textContent = cur; paint(); speak(cur);
+      el.textContent = cur; paint(); if(!quiet) speak(cur);
     };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
@@ -703,21 +706,21 @@ function initDrill(root){
       if(a==='say' && cur) speak(cur);
       if(a==='reset'){ seen['tricky']=new Set(); saveSeen(); paint(); }
     });
-    next();
+    next(true);
   })(root.querySelector('[data-drill="tricky"]'));
 
   /* — диктант — */
   (box => {
     const el = box.querySelector('[data-word]');
     let cur = null;
-    const next = () => { cur = rnd(coveredWords()); el.textContent=cur; el.classList.add('hide'); speak(cur); };
+    const next = (quiet) => { cur = rnd(coveredWords()); el.textContent=cur; el.classList.add('hide'); if(!quiet) speak(cur); };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
       if(a==='play' && cur) speak(cur);
       if(a==='show') el.classList.remove('hide');
       if(a==='next') next();
     });
-    next();
+    next(true);
   })(root.querySelector('[data-drill="dictation"]'));
 
   /* — пары гласных — */
@@ -726,12 +729,12 @@ function initDrill(root){
     const tip = box.querySelector('[data-tip]'), score = box.querySelector('[data-score]');
     let gi = 0, pair = null, target = null, right = 0, total = 0;
     picks.innerHTML = MIN_PAIRS.map((g,i)=>`<button class="pk${i?'':' on'} en" data-g="${i}">${esc(g.t)}</button>`).join('');
-    const next = () => {
+    const next = (quiet) => {
       const g = MIN_PAIRS[gi];
       pair = rnd(g.p); target = rnd(pair);
       tip.textContent = g.hint;
       row.innerHTML = pair.map(w=>`<button class="pwbtn en" data-w="${esc(w)}">${esc(w)}</button>`).join('');
-      setTimeout(()=>speak(target), 260);
+      if(!quiet) setTimeout(()=>speak(target), 260);
     };
     const mark = () => { score.textContent = total ? `Угадано ${right} из ${total}` : ''; };
     box.addEventListener('click', ev => {
@@ -756,7 +759,7 @@ function initDrill(root){
       if(a==='play' && target) speak(target);
       if(a==='next') next();
     });
-    next();
+    next(true);
   })(root.querySelector('[data-drill="pairs"]'));
 }
 
