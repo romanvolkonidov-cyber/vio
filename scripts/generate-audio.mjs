@@ -57,12 +57,15 @@ const API_KEY   = process.env.ELEVENLABS_API_KEY;
 const BUCKET    = value('bucket', process.env.FIREBASE_STORAGE_BUCKET || 'violet-3e5a8.firebasestorage.app');
 const PROJECT   = value('project', process.env.GOOGLE_CLOUD_PROJECT || 'violet-3e5a8');
 const VOICE     = value('voice', 'LM5QaByxyWDmNhcQTYiS');   // Sophia — polished RP
-// Только английская модель. eleven_multilingual_v2 сам угадывает язык, и на
-// коротком слове без контекста угадывает неверно: немая e перестаёт быть немой
-// и cape читается как «капе», note как «нота», robe как «Räuber». Замер на 70
-// худших словах: 23 расхождения у multilingual против 7 у turbo. Параметр
-// language_code на multilingual не помогает — он его молча игнорирует (17/70).
-const MODEL     = value('model', 'eleven_turbo_v2');
+// Язык задаётся явно и не обсуждается. eleven_multilingual_v2 угадывал его сам
+// и на коротком слове угадывал неверно: немая e переставала быть немой, cape
+// читалось как «капе», note как «нота», robe как «Räuber».
+//
+// Важно, что на multilingual параметр language_code не спасает — модель его
+// молча игнорирует. Нужна модель, которая язык действительно принимает:
+// flash_v2_5 его соблюдает, поэтому en проставлен жёстко.
+const MODEL     = value('model', 'eleven_flash_v2_5');
+const LANG      = value('lang', 'en');
 const PREFIX    = 'audio/';
 // ElevenLabs принимает speed только от 0.7 до 1.2 — на 0.65 отвечает 400.
 // Всё, что медленнее, рендерим на 0.7 и дотягиваем rubberband при сборке:
@@ -89,7 +92,7 @@ const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27,
 // записанную кем-то другим, и полкурса осталось бы старым голосом.
 const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0, n);
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
-const nameOf = k => `${slug(k)}-${sha(`${k}@${VOICE}@${MODEL}@${SPEED}`, 6)}`;
+const nameOf = k => `${slug(k)}-${sha(`${k}@${VOICE}@${MODEL}@${SPEED}@${LANG}`, 6)}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ElevenLabs возвращает списанное на каждый ответ — считаем по факту, а не по оценке.
@@ -108,7 +111,7 @@ async function tts(text, attempt = 1){
     body: JSON.stringify({
       text,
       model_id: MODEL,
-      language_code: 'en',
+      language_code: LANG,
       // Учебное чтение хочет ровно и чётко, а не выразительно: низкая
       // стабильность заставляет модель «играть», и на одном коротком слове
       // это выходит как случайное ударение.
@@ -250,8 +253,8 @@ async function main(){
       // Сменили голос, модель или темп — старые файлы больше не подходят, даже
       // если текст тот же. Без этой проверки --dry честно скажет «всё готово»,
       // и половина курса останется прежним голосом.
-      const was = `${prev.voice} ${prev.model} ${prev.speed ?? 1}`;
-      const now = `${VOICE} ${MODEL} ${SPEED}`;
+      const was = `${prev.voice} ${prev.model} ${prev.speed ?? 1} ${prev.lang ?? 'en'}`;
+      const now = `${VOICE} ${MODEL} ${SPEED} ${LANG}`;
       if (was === now) manifest = prev.files || {};
       else restyled = `${prev.voice} @ ${prev.speed ?? 1}× → ${VOICE} @ ${SPEED}×`;
     } catch {}
@@ -282,7 +285,7 @@ async function main(){
   console.log(`Записей всего:   ${phrases.length}`);
   console.log(`Нужно сделать:   ${plan.length}  (${chars} символов через API)`);
   console.log(`  из них слов:   ${count('speech')} · звуков: ${count('sound')} · слияний: ${count('blend')} (бесплатно)`);
-  console.log(`Модель / голос:  ${MODEL} / ${VOICE}`);
+  console.log(`Модель / голос:  ${MODEL} / ${VOICE}   язык: ${LANG}`);
   console.log(`Темп:            ${SPEED}×` + (STRETCH !== 1
     ? `  (ElevenLabs ${API_SPEED}× + rubberband ${STRETCH.toFixed(3)}×)` : '  (нативно у модели)'));
   console.log(`Бакет:           gs://${BUCKET}/${PREFIX}`);
@@ -294,7 +297,7 @@ async function main(){
   const failed = [];
   let done = 0;
   const write = () => fsp.writeFile(MANIFEST, JSON.stringify(
-    { voice: VOICE, model: MODEL, speed: SPEED, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
+    { voice: VOICE, model: MODEL, speed: SPEED, lang: LANG, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
 
   /** Исходник для слияния: сначала соседний файл, иначе тянем из бакета. */
   async function sourceFor(word){
