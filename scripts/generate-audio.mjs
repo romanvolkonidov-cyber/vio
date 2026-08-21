@@ -56,7 +56,11 @@ const value = (n, d) => (argv.find(a => a.startsWith(`--${n}=`)) || `=${d}`).spl
 const API_KEY   = process.env.ELEVENLABS_API_KEY;
 const BUCKET    = value('bucket', process.env.FIREBASE_STORAGE_BUCKET || 'violet-3e5a8.firebasestorage.app');
 const PROJECT   = value('project', process.env.GOOGLE_CLOUD_PROJECT || 'violet-3e5a8');
-const VOICE     = value('voice', 'LM5QaByxyWDmNhcQTYiS');   // Sophia — polished RP
+// Alice — британский, категории informative_educational. Категория тут не
+// украшение: у conversational-голосов (Sophia была такой) конечные взрывные
+// не отпускаются — «robe» звучит как «роу». Для беглой речи это норма, для
+// фоникса нет: ребёнок должен услышать /b/, чтобы связать его с буквой.
+const VOICE     = value('voice', 'Xb7hH8MSUJpSbSDYk0k2');   // Alice — clear, engaging educator
 // Язык задаётся явно и не обсуждается. eleven_multilingual_v2 угадывал его сам
 // и на коротком слове угадывал неверно: немая e переставала быть немой, cape
 // читалось как «капе», note как «нота», robe как «Räuber».
