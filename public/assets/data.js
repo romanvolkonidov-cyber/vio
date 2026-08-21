@@ -64,6 +64,8 @@ export const GROUPS = [
     l:['It is hot. The sun is up.','Jack and Jill run up a hill.','','Jack has a stick.','Jill has a red box.','','A duck sits on a log.','Quack! Quack!','The duck runs off.','','Jack and Jill run back.','It was fun!'],
     k:W('the a was has and'), q:['Where do Jack and Jill run?','What has Jill got?','Who says "Quack"?'], qRu:['Куда бегут Джек и Джилл?','Что у Джилл в руках?','Кто говорит «кря»?'] } },
 
+{ id:'drill', nav:'Неделя 6', sub:'повтор', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },
+
 { id:'th', nav:'Неделя 7–8', sub:'th', c:'#FF4D6D', soft:'#FFEBEF', kind:'g', art:'moth',
   num:'Диграф 1', title:'th  =  /θ/ и /ð/',
   lead:'Этих звуков нет в русском. Ставим первым — ему нужно больше всего времени. Закладывайте две недели.',
@@ -135,7 +137,6 @@ export const GROUPS = [
     l:['Beth and Phil made a plan.','"Let us take the bike to the lake!"','','Beth got a big bag.','In the bag: a cake, chips and a dish.','','At the lake, Beth and Phil ate the cake.','Phil got a shell. The shell is thin and white.','Beth got a fish in a net.','','"This is a fine fish!" said Beth.','"That is a thin shell!" said Phil.','','Then it was time to go home.','Beth and Phil rode back.','"What a fine time!"'],
     k:W('the a and said was to go what'), q:['Where did they go?','What was in the bag?','Who got a shell?','Was it a fine trip?'], qRu:['Куда они поехали?','Что было в сумке?','Кто нашёл ракушку?','Хорошая вышла поездка?'] } },
 
-{ id:'drill', nav:'Неделя 6', sub:'повтор', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },
 
 { id:'cards', nav:'🖨 Карточки', c:'#6E7691', kind:'cards', art:'cards' },
 
