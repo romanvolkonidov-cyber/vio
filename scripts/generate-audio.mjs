@@ -168,8 +168,13 @@ function clean(buffer){
     // volumedetect пишет в stderr, поэтому spawnSync.
     const probe = spawnSync('ffmpeg', ['-i', at('t.wav'), '-af', 'volumedetect', '-f', 'null', '-'],
       { encoding: 'utf8' }).stderr;
-    const mean = parseFloat(probe.match(/mean_volume:\s*(-?[\d.]+)/)[1]);
-    const peak = parseFloat(probe.match(/max_volume:\s*(-?[\d.]+)/)[1]);
+    const mm = probe.match(/mean_volume:\s*(-?[\d.]+)/);
+    const pk = probe.match(/max_volume:\s*(-?[\d.]+)/);
+    // Подрезка иногда съедает всё: если запись почти тишина, измерять нечего.
+    // Раньше здесь падало на null, роняя весь прогон из-за одного файла.
+    if (!mm || !pk) return buffer;
+    const mean = parseFloat(mm[1]);
+    const peak = parseFloat(pk[1]);
     const gain = Math.min(TARGET_MEAN_DB - mean, PEAK_CEILING_DB - peak);
 
     execFileSync('ffmpeg', ['-y', '-i', at('t.wav'), '-af', `volume=${gain.toFixed(2)}dB`,
