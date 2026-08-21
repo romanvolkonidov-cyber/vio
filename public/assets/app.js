@@ -1,4 +1,4 @@
-import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, VOICED_SOUNDS, MIN_PAIRS, trickyWords, drillWords } from './data.js';
+import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords } from './data.js';
 import { art } from './art.js';
 
 /* ==================== СОСТОЯНИЕ ==================== */
@@ -113,12 +113,6 @@ function speakBlend(word){
   });
 }
 
-/** Отдельный звук — только те, что тянутся голосом; взрывные говорит взрослый. */
-function speakSound(ipa){
-  const url = MANIFEST && MANIFEST['sound:'+ipa];
-  if(url) playUrl(url);
-  return !!url;
-}
 
 /* Столбик подсвечивает слова по очереди и держит темп — ждать сеть на каждом
    слове нельзя. При открытии набора его озвучка тихо уезжает в кэш браузера,
@@ -286,11 +280,7 @@ function groupHTML(g){
       <h1 class="big en">${esc(g.title)}</h1>
       <p class="sub">${esc(g.lead)}</p>
     </div>
-    <div class="chips">${g.sounds.map(([l,i])=>{
-      const has = !!VOICED_SOUNDS[i];
-      return `<${has?'button':'div'} class="chip${has?' say':''}" style="--c:${g.c}"${has?` data-sound="${esc(i)}"`:''}>`+
-        `<b class="en">${esc(l)}</b><i>${esc(i)}</i>${has?'<u>🔊</u>':'<u class="mute">вы</u>'}</${has?'button':'div'}>`;
-    }).join('')}</div>
+    <div class="chips">${g.sounds.map(([l,i])=>`<div class="chip" style="--c:${g.c}"><b class="en">${esc(l)}</b><i>${esc(i)}</i></div>`).join('')}</div>
     <div class="artic">${g.sounds.map(([l,i,t])=>`<b>${esc(l)}</b> — ${esc(t)}`).join(' · ')}</div>
   </div>`;
   if(g.cols) h += `<div class="card"><h2 class="sec"><span class="emo">📊</span> Слова · читаем столбиками</h2>
@@ -505,9 +495,6 @@ function initPair(box){
 
 /* ==================== ГЛОБАЛЬНЫЕ КЛИКИ ==================== */
 document.addEventListener('click', ev=>{
-  const snd = ev.target.closest('[data-sound]');
-  if(snd) speakSound(snd.dataset.sound);
-
   const fl = ev.target.closest('[data-fluent]');
   if(fl) toggleFluent(fl.dataset.fluent);
 

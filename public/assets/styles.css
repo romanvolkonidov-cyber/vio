@@ -253,16 +253,6 @@ select.fld{appearance:none;cursor:pointer}
 .foot{text-align:center;color:var(--ink3);font-size:13.5px;padding:28px 16px 8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* ==================== ЗВУК НА ФИШКЕ НАБОРА ==================== */
-/* Тянущиеся звуки можно послушать, взрывные — нет: без гласной они не
-   произносятся, и синтез даёт «пэ», «кэ». Их говорит взрослый, и фишка
-   помечена «вы», чтобы это было видно сразу, а не выяснялось нажатием. */
-.chip.say{ cursor:pointer; font:inherit; text-align:center; border:0; }
-.chip u{ display:block; text-decoration:none; font-size:11px; line-height:1.2; margin-top:2px; opacity:.75; }
-.chip u.mute{ font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; opacity:.45; }
-.chip.say:hover{ transform:translateY(-2px); }
-.chip.say:active{ transform:translateY(0); }
-
 /* ==================== ОТМЕТКА БЕГЛОСТИ ==================== */
 .fluent{
   margin-top:7px; width:100%; border:1.5px dashed var(--hair); background:transparent;

@@ -57,7 +57,12 @@ const API_KEY   = process.env.ELEVENLABS_API_KEY;
 const BUCKET    = value('bucket', process.env.FIREBASE_STORAGE_BUCKET || 'violet-3e5a8.firebasestorage.app');
 const PROJECT   = value('project', process.env.GOOGLE_CLOUD_PROJECT || 'violet-3e5a8');
 const VOICE     = value('voice', 'LM5QaByxyWDmNhcQTYiS');   // Sophia — polished RP
-const MODEL     = value('model', 'eleven_multilingual_v2');
+// Только английская модель. eleven_multilingual_v2 сам угадывает язык, и на
+// коротком слове без контекста угадывает неверно: немая e перестаёт быть немой
+// и cape читается как «капе», note как «нота», robe как «Räuber». Замер на 70
+// худших словах: 23 расхождения у multilingual против 7 у turbo. Параметр
+// language_code на multilingual не помогает — он его молча игнорирует (17/70).
+const MODEL     = value('model', 'eleven_turbo_v2');
 const PREFIX    = 'audio/';
 // ElevenLabs принимает speed только от 0.7 до 1.2 — на 0.65 отвечает 400.
 // Всё, что медленнее, рендерим на 0.7 и дотягиваем rubberband при сборке:
@@ -75,7 +80,8 @@ const FORCE     = flag('force');
 // Замерено по заголовку character-cost, который приходит на каждый ответ:
 // 3 символа -> 1 кредит, 15 -> 4, 22 -> 6, 44 -> 12. То есть примерно 0,27
 // кредита на символ, а не 1. Точный счёт всё равно печатается по факту внизу.
-const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27, eleven_flash_v2_5: 0.14, eleven_turbo_v2_5: 0.14 };
+const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27,
+  eleven_turbo_v2: 0.14, eleven_flash_v2: 0.14, eleven_flash_v2_5: 0.14, eleven_turbo_v2_5: 0.14 };
 
 // Имя файла — читаемый слаг плюс хвост от хеша: слаг обрезан до 60 символов и
 // без хвоста две разные строки рассказа могут дать одно имя. В хеш входят и
@@ -89,13 +95,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // ElevenLabs возвращает списанное на каждый ответ — считаем по факту, а не по оценке.
 let spent = 0;
 
+// У fetch в node таймаута нет: один зависший запрос останавливает весь прогон
+// молча — процесс жив, файлы не пишутся. Однажды так и вышло на 710-й записи.
+const TIMEOUT_MS = 45000;
+const withTimeout = (ms) => AbortSignal.timeout(ms);
+
 async function tts(text, attempt = 1){
   const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`, {
+    signal: withTimeout(TIMEOUT_MS),
     method: 'POST',
     headers: { 'xi-api-key': API_KEY, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
     body: JSON.stringify({
       text,
       model_id: MODEL,
+      language_code: 'en',
       // Учебное чтение хочет ровно и чётко, а не выразительно: низкая
       // стабильность заставляет модель «играть», и на одном коротком слове
       // это выходит как случайное ударение.
@@ -289,7 +302,7 @@ async function main(){
     if (fs.existsSync(local)) return fsp.readFile(local);
     const url = manifest[word];
     if (url) {
-      const r = await fetch(url);
+      const r = await fetch(url, { signal: withTimeout(TIMEOUT_MS) });
       if (r.ok) return Buffer.from(await r.arrayBuffer());
     }
     // Слова ещё нет — запишем его сейчас, слияние соберётся из свежей записи.
