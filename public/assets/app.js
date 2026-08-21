@@ -18,6 +18,12 @@ const got = id => (seen[id] ||= new Set());
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+/* Страница объявлена русской, а внутри сотни английских слов. Без lang="en"
+   и скринридер, и запасной голос браузера читают их по русским правилам. */
+function markEnglish(root){
+  (root || document).querySelectorAll('.en:not([lang])').forEach(e => e.setAttribute('lang','en'));
+}
+
 function saveSeen(){ const o={}; for(const k in seen) o[k]=[...seen[k]]; LS.set('seen',o); }
 
 /* ==================== БЕГЛОСТЬ ====================
@@ -101,14 +107,19 @@ function speakDone(text){
   });
 }
 
-/** Слово, растянутое для слияния: сначала «сссаааат», потом обычное. */
-function speakBlend(word){
+/** Слово, растянутое для слияния: сначала «сссаааат», потом обычное.
+    onStretch получает реальную длительность растянутой записи — под неё
+    подсветка и подстраивается. */
+function speakBlend(word, onStretch){
   const slow = MANIFEST && MANIFEST['blend:'+word];
   if(!slow) return speakDone(word);
   return new Promise(res=>{
     stopAudio();
     player = new Audio(slow);
     player.playbackRate = rate;
+    player.addEventListener('loadedmetadata', ()=>{
+      if(onStretch) onStretch(player.duration / player.playbackRate);
+    });
     const next = () => { setTimeout(()=>speakDone(word).then(res), 260); };
     player.addEventListener('ended', next);
     player.addEventListener('error', next);
@@ -205,7 +216,7 @@ function show(id){
   document.querySelectorAll('.seg').forEach(s=>s.classList.toggle('on',s.dataset.go===id));
   const s=document.querySelector('.seg.on'); if(s) s.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'}); stopAudio(); stopWalk();
-  LS.set('tab', id); warm(id);
+  LS.set('tab', id); warm(id); markEnglish(document.getElementById('x-'+id));
 }
 
 function startHTML(){ return `
@@ -321,6 +332,7 @@ function spinHTML(g){ return `<div class="spin" data-spin="${g.id}">
     <button class="btn soft sm" data-a="blend">🐛 Слить по звукам</button>
     <button class="btn soft sm" data-a="say">🔊</button>
   </div>
+  <p class="hint" style="margin:9px 0 0">«Слить» тянет слово целиком — <span class="en">сссаааат</span> — и сразу повторяет в обычном темпе. Звуки не разрываются намеренно: если произнести <span class="en">/t/</span> отдельно, получится «тэ», и ребёнок начнёт слышать лишний гласный там, где его нет.</p>
   <div class="bank"><div class="bhead"><span class="t">Слова набора</span><span class="cnt" data-cnt></span>
     <button class="re" data-a="reset">Сбросить</button></div>
   <div class="bws" data-bank></div></div></div>`; }
@@ -445,13 +457,31 @@ function initSpin(box){
      видел подсветку и запоминал слово картинкой. Теперь под подсветку идёт
      растянутая запись — «сссаааат», — а следом слово в обычном темпе. */
   const clearParts = () => { pips.forEach(p=>p.classList.remove('a')); tiles.forEach(t=>t.style.transform=''); };
+  /* Подсветка идёт по реальной длине растянутой записи, а не по таймеру.
+     Записи длятся от 1,07 до 1,95 секунды, а таймер стоял на 1,41 — на
+     половине слов огоньки и звук расходились, то есть кнопка не делала ровно
+     того, ради чего нужна. */
+  let blendTimers = [];
   async function blend(w){
-    let i=0;
-    const step=()=>{
-      clearParts();
-      if(i<3){ pips[i].classList.add('a'); tiles[i].style.transform='translateY(-7px) scale(1.06)'; i++; setTimeout(step,470); }
-    }; step();
-    await speakBlend(w);
+    blendTimers.forEach(clearTimeout); blendTimers = [];
+    const parts = split(w);
+    await speakBlend(w, dur => {
+      // Три доли не равны: гласная в растянутой записи звучит дольше согласных,
+      // а диграф в начале (ch, th, sh) дольше одиночной буквы. Ровные трети
+      // заметно уезжали от звука на словах вроде tin.
+      const wt = [parts[0].length * 1.0, 1.7, Math.max(1, parts[2].length) * 1.05];
+      const sum = wt[0] + wt[1] + wt[2];
+      let acc = 0;
+      [0,1,2].forEach(i => {
+        blendTimers.push(setTimeout(()=>{
+          clearParts();
+          pips[i].classList.add('a');
+          tiles[i].style.transform='translateY(-7px) scale(1.06)';
+        }, acc * dur * 1000));
+        acc += wt[i] / sum;
+      });
+    });
+    blendTimers.forEach(clearTimeout); blendTimers = [];
     clearParts();
     bigEl.classList.remove('bump'); void bigEl.offsetWidth; bigEl.classList.add('bump');
   }
@@ -531,6 +561,7 @@ function renderCards(){
   if(g) g.innerHTML = list.map(([a,l,w,e,v])=>`<div class="fc"><div class="e">${e}</div><div class="l en ${v?'v':''}">${esc(l)}</div><div class="w en">${esc(w)}</div></div>`).join('');
   document.getElementById('printsheet').innerHTML = '<div class="pg">' + list.map(([a,l,w,e])=>
     `<div class="pc"><div class="e">${e}</div><div class="l">${esc(l)}</div><div class="w">${esc(w)}</div></div>`).join('') + '</div>';
+  markEnglish(g);
 }
 
 
@@ -540,6 +571,26 @@ function renderCards(){
    (самые частые слова английского, правило на них не работает), диктант
    (обратная операция закрепляет чтение быстрее, чем повторное чтение) и
    пары гласных (у русскоязычных /æ/, /e/ и /ʌ/ схлопываются в один звук). */
+/* Насколько далеко ребёнок продвинулся. Раньше повтор и диктант брали все 303
+   слова курса, включая flute, Steve и theme из последнего набора, — ребёнку
+   первой недели, знающему s a t p i n, показывали слова, которые он не может
+   прочитать в принципе. Считаем по отметкам «бегло», а если их ещё нет — по
+   тому, где он вообще что-то нажимал. */
+function reachedGroup(){
+  const order = GROUPS.filter(g => g.kind === 'g' || g.kind === 'ph' || g.kind === 'me');
+  let last = order[0];
+  for (const g of order){
+    const touched = colsOf(g).some(c => fluent.has(c)) || (seen[g.id] && seen[g.id].size);
+    if (touched) last = g;
+  }
+  return last;
+}
+function coveredWords(){ return drillWords(reachedGroup().id); }
+function coveredLabel(){
+  const g = reachedGroup();
+  return `${g.nav.replace(/^\d+\s·\s/,'')} и раньше · ${coveredWords().length} слов`;
+}
+
 function drillHTML(){
   return `
 <div class="card hero" style="--t:#E0F4FE;--c:#0EA5E9">
@@ -553,8 +604,9 @@ function drillHTML(){
 
 <div class="card" data-drill="review">
   <h2 class="sec"><span class="emo">🔀</span> Повтор вперемешку</h2>
-  <p class="sub">Слова из всех наборов сразу, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему.</p>
+  <p class="sub">Слова вперемешку, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему. Берутся только пройденные наборы.</p>
   <div class="dbig en" data-word>—</div>
+  <p class="hint" data-pool style="margin:0 0 10px"></p>
   <div class="bar" style="justify-content:flex-start">
     <button class="btn" data-d="next" style="background:#0EA5E9;box-shadow:0 5px 14px #0EA5E955">🔀 Новое слово</button>
     <button class="btn soft sm" data-d="say">🔊 Проверить</button>
@@ -608,10 +660,13 @@ function initDrill(root){
 
   /* — повтор вперемешку — */
   (box => {
-    const el = box.querySelector('[data-word]');
-    const pool = drillWords('me');
+    const el = box.querySelector('[data-word]'), pool_ = box.querySelector('[data-pool]');
     let cur = null;
-    const next = () => { let w; do { w = rnd(pool); } while(w===cur && pool.length>1); cur=w; el.textContent=w; };
+    const next = () => {
+      const pool = coveredWords();
+      if(pool_) pool_.textContent = coveredLabel();
+      let w; do { w = rnd(pool); } while(w===cur && pool.length>1); cur=w; el.textContent=w;
+    };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
       if(a==='next') next();
@@ -654,9 +709,8 @@ function initDrill(root){
   /* — диктант — */
   (box => {
     const el = box.querySelector('[data-word]');
-    const pool = drillWords('me');
     let cur = null;
-    const next = () => { cur = rnd(pool); el.textContent=cur; el.classList.add('hide'); speak(cur); };
+    const next = () => { cur = rnd(coveredWords()); el.textContent=cur; el.classList.add('hide'); speak(cur); };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
       if(a==='play' && cur) speak(cur);
@@ -692,7 +746,10 @@ function initDrill(root){
         row.querySelectorAll('.pwbtn').forEach(b=>b.disabled=true);
         if(!ok) row.querySelector(`[data-w="${CSS.escape(target)}"]`)?.classList.add('ok');
         mark();
-        setTimeout(next, 1100);
+        // Записи «bad, bed» уже есть — даём услышать контраст сразу после ответа,
+        // иначе ребёнок так и не сравнит два звука подряд.
+        setTimeout(()=>speak(pair[0]+', '+pair[1]), 420);
+        setTimeout(next, 2200);
         return;
       }
       const a = ev.target.closest('[data-d]')?.dataset.d;
@@ -757,6 +814,7 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   if(drillPane) initDrill(drillPane);
   renderCards();
   paintFluent();
+  markEnglish();          // после того, как отрисованы тренировка и карточки
   show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'start');
 
   if(MANIFEST) setStat('Слова читает '+VOICE_NAME+'. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
