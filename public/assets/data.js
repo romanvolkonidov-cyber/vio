@@ -1,7 +1,7 @@
 // Учебные данные. Правится вручную — всё остальное строится отсюда.
 const W = s => s.trim().split(/\s+/);
 
-export const VOICE_DEFAULT = 'LM5QaByxyWDmNhcQTYiS'; // Sophia — polished RP, en-GB, под транскрипцию таблиц
+export const VOICE_DEFAULT = 'Xb7hH8MSUJpSbSDYk0k2'; // Alice — clear, engaging educator, en-GB
 
 export const GROUPS = [
 { id:'start', nav:'Старт', c:'#3D7BFF', kind:'start', art:'sun' },

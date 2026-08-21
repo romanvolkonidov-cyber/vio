@@ -61,6 +61,7 @@ const PROJECT   = value('project', process.env.GOOGLE_CLOUD_PROJECT || 'violet-3
 // не отпускаются — «robe» звучит как «роу». Для беглой речи это норма, для
 // фоникса нет: ребёнок должен услышать /b/, чтобы связать его с буквой.
 const VOICE     = value('voice', 'Xb7hH8MSUJpSbSDYk0k2');   // Alice — clear, engaging educator
+const VOICE_NAME = value('voice-name', 'Alice');            // как звать голос в интерфейсе
 // Язык задаётся явно и не обсуждается. eleven_multilingual_v2 угадывал его сам
 // и на коротком слове угадывал неверно: немая e переставала быть немой, cape
 // читалось как «капе», note как «нота», robe как «Räuber».
@@ -306,7 +307,7 @@ async function main(){
   const failed = [];
   let done = 0;
   const write = () => fsp.writeFile(MANIFEST, JSON.stringify(
-    { voice: VOICE, model: MODEL, speed: SPEED, lang: LANG, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
+    { voice: VOICE, voiceName: VOICE_NAME, model: MODEL, speed: SPEED, lang: LANG, bucket: BUCKET, generated: new Date().toISOString(), files: manifest }, null, 2) + '\n');
 
   /** Исходник для слияния: сначала соседний файл, иначе тянем из бакета. */
   async function sourceFor(word){

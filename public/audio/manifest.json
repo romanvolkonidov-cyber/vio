@@ -789,5 +789,6 @@
     "blend:rush": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/blend-rush-3d9f76-62213bf4.mp3",
     "blend:gush": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/blend-gush-714e30-fcccf44a.mp3",
     "blend:hush": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/blend-hush-032802-c0eeff32.mp3"
-  }
+  },
+  "voiceName": "Alice"
 }

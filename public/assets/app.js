@@ -10,6 +10,9 @@ let seen = {}, audioOn = true, rate = 1;
 let fluent = new Set();   // столбики, отмеченные родителем как беглые
 let MANIFEST = null;                       // {текст: URL в Cloud Storage} из audio/manifest.json
 let BAKED = 1;                             // темп, с которым записаны файлы — из манифеста
+// Имя голоса когда-то было вписано в текст, и после смены голоса подпись врала.
+// Теперь оно едет вместе с манифестом — переозвучили, и надпись сама верна.
+let VOICE_NAME = 'Alice';
 let player = null, timer = null, actx = null;
 const got = id => (seen[id] ||= new Set());
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -251,7 +254,7 @@ function startHTML(){ return `
     <p style="margin:8px 0 0">Спиннер собирает слова только из пройденных звуков — незнакомого не выпадет.</p></div></details>
   <details class="row"><summary><span class="emo">🔊</span> Как работает озвучка</summary>
     <div class="body">
-      <p style="margin:0 0 8px">Слова читает <b>Sophia</b> — живой голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — в ⚙︎.</p>
+      <p style="margin:0 0 8px">Слова читает <b>Alice</b> — живой британский голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — в ⚙︎.</p>
       <p style="margin:0"><b>Отдельные звуки не озвучиваются намеренно.</b> Синтез читает их как названия букв — «си» вместо /k/ — и это сломало бы метод. Звуки произносит взрослый по подсказкам в карточке набора.</p></div></details>
   <details class="row"><summary><span class="emo">🧩</span> Проверка: бессмысленные слова</summary>
     <div class="body"><p style="margin:0 0 8px">Если ребёнок читает выдуманные слова — он декодирует, а не угадывает. Скажите: «Это слова из языка роботов».</p>
@@ -742,6 +745,7 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
       const j = await r.json();
       MANIFEST = j.files || j;
       BAKED = Number(j.speed) || 1;
+      if(j.voiceName) VOICE_NAME = j.voiceName;
       if(MANIFEST && Object.keys(MANIFEST).length) break;
     }catch(e){}
   }
@@ -755,7 +759,7 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   paintFluent();
   show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'start');
 
-  if(MANIFEST) setStat('Слова читает Sophia. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
+  if(MANIFEST) setStat('Слова читает '+VOICE_NAME+'. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
   else setStat('Файлы озвучки не найдены — работает голос браузера. Соберите её: npm run audio.','err');
 
   try{ speechSynthesis.getVoices(); }catch(e){}
