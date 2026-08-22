@@ -97,7 +97,16 @@ const CREDITS_PER_CHAR = { eleven_multilingual_v2: 0.27, eleven_v3: 0.27,
 // записанную кем-то другим, и полкурса осталось бы старым голосом.
 const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0, n);
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
-const nameOf = k => `${slug(k)}-${sha(`${k}@${VOICE}@${MODEL}@${SPEED}@${LANG}`, 6)}`;
+// Транскрипция входит в имя: поправили её — файл считается другим и
+// переозвучивается, а не подтягивается старый из кэша.
+const pronOf = k => Object.entries(PRON).filter(([w]) => new RegExp(`\\b${w}\\b`).test(k))
+  .map(([w, ph]) => `${w}=${ph}`).join(',');
+const nameOf = k => {
+  const pr = pronOf(k);
+  // Хвост про транскрипцию дописывается только там, где она задана: иначе
+  // имена изменились бы у всех записей разом и переозвучился бы весь курс.
+  return `${slug(k)}-${sha(`${k}@${VOICE}@${MODEL}@${SPEED}@${LANG}` + (pr ? `@${pr}` : ''), 6)}`;
+};
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ElevenLabs возвращает списанное на каждый ответ — считаем по факту, а не по оценке.
@@ -108,14 +117,37 @@ let spent = 0;
 const TIMEOUT_MS = 45000;
 const withTimeout = (ms) => AbortSignal.timeout(ms);
 
+/**
+ * Слова с заданной вручную транскрипцией оборачиваются в тег <phoneme>.
+ * Тег понимают только eleven_flash_v2 и eleven_turbo_v2 — на flash_v2_5 он
+ * молча срезается, — поэтому для таких строк модель меняется на flash_v2.
+ * Голос остаётся тот же.
+ */
+const PHONEME_MODEL = 'eleven_flash_v2';
+let PRON = {};
+
+function pinned(text){
+  const words = Object.keys(PRON);
+  if (!words.length) return null;
+  const re = new RegExp(`\\b(${words.join('|')})\\b`, 'g');
+  if (!re.test(text)) return null;
+  return text.replace(new RegExp(`\\b(${words.join('|')})\\b`, 'g'),
+    (w) => `<phoneme alphabet="cmu-arpabet" ph="${PRON[w]}">${w}</phoneme>`);
+}
+
 async function tts(text, attempt = 1){
-  const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`, {
+  const pin = pinned(text);
+  const model = pin ? PHONEME_MODEL : MODEL;
+  const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}`
+      + `?output_format=mp3_44100_128${pin ? '&enable_ssml_parsing=true' : ''}`, {
     signal: withTimeout(TIMEOUT_MS),
     method: 'POST',
     headers: { 'xi-api-key': API_KEY, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
     body: JSON.stringify({
-      text,
-      model_id: MODEL,
+      text: pin || text,
+      model_id: model,
+      // language_code задаёт язык там, где модель его принимает; flash_v2
+      // английская сама по себе, лишний параметр ей не мешает.
       language_code: LANG,
       // Учебное чтение хочет ровно и чётко, а не выразительно: низкая
       // стабильность заставляет модель «играть», и на одном коротком слове
@@ -250,7 +282,7 @@ async function ensureCors(bucket){
 }
 
 async function main(){
-  const { collectAudio } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
+  const { collectAudio, PRONUNCIATION } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
   // Слияние делается из обычной записи того же слова, поэтому идёт последним.
   const phrases = collectAudio().sort((a, b) => (a.kind === 'blend') - (b.kind === 'blend'));
 
@@ -270,6 +302,7 @@ async function main(){
     } catch {}
   }
 
+  PRON = PRONUNCIATION || {};
   const bucket = DRY ? null : await openBucket();
   if (bucket) await ensureCors(bucket);
 
@@ -281,9 +314,19 @@ async function main(){
   }
   const objectOf = url => { try { return decodeURIComponent(new URL(url).pathname.split(`/${BUCKET}/`)[1] || ''); } catch { return ''; } };
 
+  // Переозвучиваем, если записи нет, если файл пропал из бакета — или если
+  // имя, которое ему полагается сейчас, разошлось с тем, что лежит в
+  // манифесте. В имя входят голос, модель, темп, язык и транскрипция, так что
+  // правка любого из них поднимает ровно те записи, которых она касается, а
+  // не весь курс.
+  const stale = (key, url) => {
+    const obj = objectOf(url);
+    return !obj.startsWith(`${PREFIX}${nameOf(key)}-`);
+  };
   const plan = phrases.filter(j => {
     const url = manifest[j.key];
     if (!url) return true;
+    if (stale(j.key, url)) return true;
     return bucket ? !inBucket.has(objectOf(url)) : false;
   }).slice(0, LIMIT);
 
