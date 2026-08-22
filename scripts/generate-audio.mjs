@@ -99,8 +99,10 @@ const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0,
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
 // Транскрипция входит в имя: поправили её — файл считается другим и
 // переозвучивается, а не подтягивается старый из кэша.
-const pronOf = k => Object.entries(PRON).filter(([w]) => new RegExp(`\\b${w}\\b`).test(k))
-  .map(([w, ph]) => `${w}=${ph}`).join(',');
+const pronOf = k => [
+  ...Object.entries(PRON).filter(([w]) => new RegExp(`\\b${w}\\b`).test(k)).map(([w, ph]) => `${w}=${ph}`),
+  ...PLAIN.filter((w) => new RegExp(`\\b${w}\\b`).test(k)).map((w) => `${w}=v2`),
+].join(',');
 const nameOf = k => {
   const pr = pronOf(k);
   // Хвост про транскрипцию дописывается только там, где она задана: иначе
@@ -125,6 +127,11 @@ const withTimeout = (ms) => AbortSignal.timeout(ms);
  */
 const PHONEME_MODEL = 'eleven_flash_v2';
 let PRON = {};
+let PLAIN = [];
+
+/** Слово, которое верно читает только flash_v2 — но без всякого тега. */
+const wantsPlainV2 = (text) =>
+  PLAIN.some((w) => new RegExp(`\\b${w}\\b`).test(text));
 
 function pinned(text){
   const words = Object.keys(PRON);
@@ -137,7 +144,10 @@ function pinned(text){
 
 async function tts(text, attempt = 1){
   const pin = pinned(text);
-  const model = pin ? PHONEME_MODEL : MODEL;
+  // На flash_v2 уходят и слова с транскрипцией, и те, что просто читаются
+  // верно только там. В склейке вроде «rid, ride» встречается и то и другое:
+  // модель одна, а тег вешается лишь на слова из карты транскрипций.
+  const model = (pin || wantsPlainV2(text)) ? PHONEME_MODEL : MODEL;
   const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}`
       + `?output_format=mp3_44100_128${pin ? '&enable_ssml_parsing=true' : ''}`, {
     signal: withTimeout(TIMEOUT_MS),
@@ -282,7 +292,7 @@ async function ensureCors(bucket){
 }
 
 async function main(){
-  const { collectAudio, PRONUNCIATION } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
+  const { collectAudio, PRONUNCIATION, PLAIN_V2 } = await import(pathToFileURL(path.join(ROOT, 'public', 'assets', 'data.js')).href);
   // Слияние делается из обычной записи того же слова, поэтому идёт последним.
   const phrases = collectAudio().sort((a, b) => (a.kind === 'blend') - (b.kind === 'blend'));
 
@@ -303,6 +313,7 @@ async function main(){
   }
 
   PRON = PRONUNCIATION || {};
+  PLAIN = PLAIN_V2 || [];
   const bucket = DRY ? null : await openBucket();
   if (bucket) await ensureCors(bucket);
 
