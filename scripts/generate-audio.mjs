@@ -99,7 +99,9 @@ const sha = (s, n) => crypto.createHash('sha1').update(s).digest('hex').slice(0,
 const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
 // Транскрипция входит в имя: поправили её — файл считается другим и
 // переозвучивается, а не подтягивается старый из кэша.
-const pronOf = k => [
+const isolatedKey = k => k.replace(/^blend:/, '').trim()
+  .split(/[^A-Za-z']+/).filter(Boolean).length <= 2;
+const pronOf = k => !isolatedKey(k) ? '' : [
   ...Object.entries(PRON).filter(([w]) => new RegExp(`\\b${w}\\b`).test(k)).map(([w, ph]) => `${w}=${ph}`),
   ...PLAIN.filter((w) => new RegExp(`\\b${w}\\b`).test(k)).map((w) => `${w}=v2`),
 ].join(',');
@@ -129,13 +131,19 @@ const PHONEME_MODEL = 'eleven_flash_v2';
 let PRON = {};
 let PLAIN = [];
 
+/* Правки произношения касаются только одиночных слов и склеек пар вроде
+   «us, use». Внутри фразы у модели есть контекст, и те же слова она читает
+   верно — трогать их там незачем, а перезапись рискует испортить то, что
+   уже звучит правильно. */
+const isolated = (text) => text.trim().split(/[^A-Za-z']+/).filter(Boolean).length <= 2;
+
 /** Слово, которое верно читает только flash_v2 — но без всякого тега. */
 const wantsPlainV2 = (text) =>
-  PLAIN.some((w) => new RegExp(`\\b${w}\\b`).test(text));
+  isolated(text) && PLAIN.some((w) => new RegExp(`\\b${w}\\b`).test(text));
 
 function pinned(text){
   const words = Object.keys(PRON);
-  if (!words.length) return null;
+  if (!words.length || !isolated(text)) return null;
   const re = new RegExp(`\\b(${words.join('|')})\\b`, 'g');
   if (!re.test(text)) return null;
   return text.replace(new RegExp(`\\b(${words.join('|')})\\b`, 'g'),
