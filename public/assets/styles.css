@@ -241,11 +241,20 @@ select.fld{appearance:none;cursor:pointer}
   .hdr,.wrap,.scrim,.sheet,.foot{display:none!important}
   #printsheet{display:block!important}
   .pg{display:grid;grid-template-columns:repeat(3,1fr)}
+  /* Карточка печатается с одной стороны, а инструкция говорила «покажите
+     ребёнку сторону с буквой» — второй стороны просто не было. Теперь внизу
+     полоска со словом, отделённая точечной линией: её отгибают назад, и слово
+     оказывается на обороте, лицом к взрослому. Напечатано оно перевёрнутым —
+     после загиба читается правильно. */
   .pc{border:1.4px dashed #b0b0b0;height:57mm;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:2mm;break-inside:avoid}
+    break-inside:avoid}
+  .pc .face{flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2mm}
   .pc .e{font-size:29pt;line-height:1}
   .pc .l{font-family:'Andika',sans-serif;font-weight:700;font-size:42pt;line-height:1}
-  .pc .w{font-family:'Andika',sans-serif;font-weight:700;font-size:12pt;color:#555}
+  .pc .w{border-top:1px dotted #b0b0b0;height:13mm;display:flex;align-items:center;
+    justify-content:center;font-family:'Andika',sans-serif;font-weight:700;
+    font-size:12pt;color:#555;transform:rotate(180deg)}
 }
 .pane{display:none}
 .pane.on{display:block;animation:fade .28s ease}

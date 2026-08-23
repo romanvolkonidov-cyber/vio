@@ -445,9 +445,9 @@ function cardsHTML(){
     <button class="btn" data-print>🖨 Распечатать</button></div>
   <div class="card"><h2 class="sec">Предпросмотр</h2><div class="fgrid" id="fgrid" style="margin-top:13px"></div></div>
   <div class="list"><details class="row" open><summary><span class="emo">✂️</span> Как пользоваться</summary><div class="body"><ul>
-    <li>Разрежьте по пунктиру, наклейте на картон.</li>
+    <li>Разрежьте по пунктиру, затем отогните назад полоску со словом — по точечной линии. Слово окажется на обороте, лицом к вам: оно и напечатано перевёрнутым, чтобы после загиба читалось правильно. Наклейте на картон.</li>
     <li>Разминка 30 секунд в начале занятия: показываете карточку — ребёнок говорит <b>звук</b>, не название буквы.</li>
-    <li>Слово-якорь — подсказка для взрослого. Ребёнку показывайте стороной с буквой.</li>
+    <li>Слово-якорь — подсказка для взрослого, на обороте. Ребёнок видит только картинку и букву.</li>
     <li>Освоенные карточки не убирайте: колода должна расти.</li>
   </ul></div></details></div>`;
 }
@@ -655,7 +655,8 @@ function renderCards(){
   const g = document.getElementById('fgrid');
   if(g) g.innerHTML = list.map(([a,l,w,e,v])=>`<div class="fc"><div class="e">${e}</div><div class="l en ${v?'v':''}">${esc(l)}</div><div class="w en">${esc(w)}</div></div>`).join('');
   document.getElementById('printsheet').innerHTML = '<div class="pg">' + list.map(([a,l,w,e])=>
-    `<div class="pc"><div class="e">${e}</div><div class="l">${esc(l)}</div><div class="w">${esc(w)}</div></div>`).join('') + '</div>';
+    `<div class="pc"><div class="face"><div class="e">${e}</div><div class="l">${esc(l)}</div></div>` +
+     `<div class="w">${esc(w)}</div></div>`).join('') + '</div>';
   markEnglish(g);
 }
 
