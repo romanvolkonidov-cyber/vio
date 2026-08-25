@@ -582,9 +582,13 @@ function initPair(box){
   const paint=()=>{ const s=got(id+'.p');
     bank.querySelectorAll('.bw').forEach(e=>{e.classList.toggle('seen',s.has(e.dataset.bw));e.classList.toggle('now',cur&&e.dataset.bw===cur[1]);});
     box.querySelector('[data-pcnt]').textContent = s.size+' / '+ps.length; };
-  const fmt=(w,sil)=>{ const p=split(w);
-    return `<span>${esc(p[0])}</span><span class="v">${esc(p[1])}</span>` +
-      (sil?`<span>${esc(p[2].slice(0,-1))}</span><span class="se">e</span>`:`<span>${esc(p[2])}</span>`); };
+  /* Немую e отрезаем ДО разбора, а не после. split ищет первую гласную, и в
+     словах без другой гласной — ate, use — он находил как раз эту самую e,
+     после чего к слову дописывалась вторая: на экране выходило «atee», «usee».
+     Теперь разбирается основа (at, us), а немая e добавляется ровно один раз. */
+  const fmt=(w,sil)=>{ const p=split(sil ? w.slice(0,-1) : w);
+    return `<span>${esc(p[0])}</span><span class="v">${esc(p[1])}</span><span>${esc(p[2])}</span>` +
+      (sil?`<span class="se">e</span>`:''); };
   /* quiet — первый показ при загрузке страницы. Звук без нажатия пугает:
      ребёнок ещё не открыл вкладку немой e, а из динамика уже слово. */
   const spin=(quiet)=>{ const s=got(id+'.p'); let pool=ps.filter(p=>!s.has(p[1])); if(!pool.length) pool=ps;
