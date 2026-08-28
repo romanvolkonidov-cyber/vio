@@ -322,6 +322,13 @@ async function main(){
 
   PRON = PRONUNCIATION || {};
   PLAIN = PLAIN_V2 || [];
+  // Строку из курса убрали — запись о ней должна уйти из манифеста, иначе он
+  // копит мусор, а уборка бакета считает эти файлы нужными и не трогает их.
+  const wanted = new Set(phrases.map(j => j.key));
+  const dropped = Object.keys(manifest).filter(k => !wanted.has(k));
+  for (const k of dropped) delete manifest[k];
+  if (dropped.length) console.log(`Удалено из манифеста строк, которых больше нет в курсе: ${dropped.length}`);
+
   const bucket = DRY ? null : await openBucket();
   if (bucket) await ensureCors(bucket);
 

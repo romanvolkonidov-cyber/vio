@@ -9,10 +9,13 @@
     "audio:dry": "node scripts/generate-audio.mjs --dry",
     "dev": "python3 -m http.server 5173 --directory public",
     "start": "npm run dev",
-    "deploy": "firebase deploy --only hosting"
+    "deploy": "firebase deploy --only hosting",
+    "check": "node scripts/check-decodable.mjs"
   },
   "devDependencies": {
     "firebase-admin": "^13.0.0"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

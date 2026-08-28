@@ -377,6 +377,7 @@ function groupHTML(g){
   if(g.spin) h += spinHTML(g);
   if(g.pairs) h += pairHTML(g);
   if(g.story) h += storyHTML(g.story);
+  if(g.story3) h += storyHTML(g.story3);   // порядок по номеру текста, а не по имени поля
   if(g.story2) h += storyHTML(g.story2);
   h += `<div class="card" style="text-align:center">
     <h2 class="sec" style="justify-content:center"><span class="emo">✅</span> На сегодня всё</h2>
