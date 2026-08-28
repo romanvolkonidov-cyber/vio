@@ -29,7 +29,7 @@ export const GROUPS = [
   spin:W('mad map man mat dad dam gap gas cat can cap tag nag sad sag did dig dip dim pig kid kit tin pin sit tip sip pit nip dot dog cod cot got top pot pop mop nod cop cog'),
   story:{ t:'Text 2 · Tom the Cat', art:'cat',
     l:['Tom is a cat.','Tom sat on a mat.','','Nan got a map.','Nan got a cap.','','Tom naps on the map!','"Tom! It is not a mat!"','Tom is mad.'],
-    k:W('is a the'), q:['Who is Tom?','What did Dad get?','Where does Tom nap?','Is Tom glad or mad?'], qRu:['Кто такой Том?','Что взял папа?','Где Том засыпает?','Том рад или сердит?'] } },
+    k:W('is a the'), q:['Who is Tom?','What did Nan get?','Where does Tom nap?','Is Tom glad or mad?'], qRu:['Кто такой Том?','Что взяла Нэн?','Где Том засыпает?','Том рад или сердит?'] } },
 
 { id:'set3', nav:'Неделя 3–4', sub:'ck e u r h b f l', c:'#FF9F1C', soft:'#FFF3E0', kind:'g', art:'bug',
   num:'Набор 3', title:'ck · e · u · r · h · b · f · l',
@@ -44,8 +44,8 @@ export const GROUPS = [
     ['u','/ʌ/',W('bug bun bus but cub cup cut fun hug mud mug run sun duck')]],
   spin:W('bad bag bat cab lad had ham hat fan fat ran rag rat back pack sack rack bed red leg ten net pet get hen beg den fed led met set let peg neck peck deck big bit dig fig fit hid him hip hit lid lip lit rib rid rip kick pick lick sick tick cod cop cot dog fog hog hop hot log lot rob rod rock lock sock dock bug bun bus but cub cup cut dug fun gum hug hum hut mud mug nut rub rug run sun tub duck luck tuck'),
   story:{ t:'Text 3 · The Bug in the Mug', art:'bug',
-    l:['Pip has a red mug.','A bug is in the mug!','','"Get up, bug!"','The bug is not sad.','The bug sits in the mug.','','Pip gets a big cup.','The bug hops in the cup.','Pip and the bug run and run.'],
-    k:W('a the is has and'), q:['What is in the mug?','Is the bug sad?','What does Pip get?'], qRu:['Кто сидит в кружке?','Жучку грустно?','Что берёт Пип?'] } },
+    l:['Pip has a red mug.','A bug is in the mug!','','"Get up, bug!"','The bug is not sad.','The bug sits in the mug.','','Pip gets a big cup.','','The bug hops in the cup!','','Pip has no mug.','Pip has no cup.','','The bug is glad.'],
+    k:W('a the is has and'), q:['What is in the mug?','What does Pip get?','Who is glad at the end?'], qRu:['Кто сидит в кружке?','Что берёт Пип?','Кто радуется в конце?'] } },
 
 { id:'set4', nav:'Неделя 5', sub:'j v w x y z qu', c:'#A855F7', soft:'#F4EAFE', kind:'g', art:'duck',
   num:'Набор 4', title:'j · v · w · x · y · z · qu  +  FLOSS',
@@ -62,8 +62,8 @@ export const GROUPS = [
       ['-ss','',W('miss kiss less mess boss fuss')],['-zz','',W('buzz fizz jazz fuzz')]] },
   spin:W('jam jab jag wag yam yak zap zag van wax jet vet web wed yes yet vex zip zig wig win wit fix six mix jig job jog jot box fox jug jut yum quiz quit quack buzz fizz jazz bell well tell fill hill doll miss kiss less mess off puff cuff'),
   story:{ t:'Text 4 · Fun in the Sun', art:'duck',
-    l:['It is hot. The sun is up.','Jack and Nan run up a hill.','','Jack has a stick.','Nan has a red box.','','A duck sits on a log.','Quack! Quack!','The duck runs off.','','Jack and Nan run back.','It was fun!'],
-    k:W('the a was has and'), q:['Where do Jack and Nan run?','What has Nan got?','Who says "Quack"?'], qRu:['Куда бегут Джек и Нэн?','Что у Нэн в руках?','Кто говорит «кря»?'] } },
+    l:['It is hot. The sun is up.','Jack and Nan run up a hill.','','Nan has a red box.','In the box is a bun.','','A duck sits on a log.','Quack! Quack!','','The duck hops up.','The duck gets the bun!','','Jack and Nan run back.','The duck runs back as well.','','"Quack!"'],
+    k:W('the a has and'), q:['Where do Jack and Nan run?','What is in the box?','Who gets the bun?'], qRu:['Куда бегут Джек и Нэн?','Что лежит в коробке?','Кто утаскивает булку?'] } },
 
 { id:'drill', nav:'Неделя 6', sub:'повтор', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },
 
@@ -101,8 +101,8 @@ export const GROUPS = [
     ['u','/ʌ/',W('shut rush hush gush shrug')]],
   spin:W('ship shin shed shop shot shut shell shall shock shrug fish dish wish cash dash rash mash mesh posh rush hush gush'),
   story:{ t:'Text 7 · The Shop', art:'fish',
-    l:['Josh has a shop.','The shop has fish and ham.','','Nan runs in.','"I wish for a fish!"','','Josh got a big dish.','The fish is in the dish.','"Cash!" said Josh.','','Nan is not sad. Nan is glad!'],
-    k:W('the a I for said'), q:['What has the shop got?','What does Nan wish for?','Is Nan sad or glad?'], qRu:['Что продаётся в лавке?','Чего хочет Нэн?','Нэн расстроена или рада?'] } },
+    l:['Josh has a shop.','The shop has fish and ham.','','Nan runs in.','"I wish for a fish!"','','Josh got a big fish.','The fish is fat.','','Nan has a thin bag.','The fish will not fit!','','Josh and Nan push and push.','','"I wish for a thin fish," said Nan.'],
+    k:W('the a I for said'), q:['What has the shop got?','What does Nan wish for?','Why will the fish not fit?'], qRu:['Что продаётся в лавке?','Чего хочет Нэн?','Почему рыба не влезает?'] } },
 
 { id:'ph', nav:'Неделя 11', sub:'ph', c:'#84CC16', soft:'#F0FADF', kind:'ph', art:'ship',
   num:'Диграф 4', title:'ph  =  /f/',
@@ -132,16 +132,16 @@ export const GROUPS = [
   extra:{ t:'Слова-обманщики · e есть, а правило не работает. Учим наизусть.',
     cols:[['✗','',W('have give live come some love done gone none one')]] },
   story:{ t:'Text 10 · Mike and the Kite', art:'kite',
-    l:['Mike has a red bike.','Kate has a big kite.','','"Ride with me!" said Mike.','The kite is up. Up, up, up!','','Mike rides. Kate runs.','Then it is time to go home.','','Kate ate a cake.','Mike ate a cake.','What a fine time!'],
-    k:W('said the to go what a'), q:['Who has a bike?','Who has a kite?','What do they eat?'], qRu:['У кого велосипед?','У кого воздушный змей?','Что они едят?'] },
+    l:['Mike has a red bike.','Kate has a big kite.','','"Ride with me!" said Mike.','The kite is up. Up, up, up!','','Then the kite tugs.','Mike rides fast!','','Kate can not stop him.','','The kite dips.','Mike is in the lake!','','Mike is wet.','"What a fine ride!" said Mike.'],
+    k:W('said the what a'), q:['Who has a bike?','What does the kite do?','Where does Mike end up?'], qRu:['У кого велосипед?','Что делает змей?','Где оказывается Майк?'] },
   story3:{ t:'Text 11 · The Cake', art:'cake',
     l:['Nan made a cake.','The cake is huge!','','"Not yet, Pip," said Nan.','','Nan ran to get a plate.','','Pip ate a big bit.','Then Pip ate the rest.','','Nan is back.','The cake is gone.','','"Pip!" said Nan.','Pip naps.'],
     k:W('the a said to then gone'),
     q:['What did Nan make?','What did Pip do?','Where is the cake at the end?'],
     qRu:['Что испекла Нэн?','Что сделал Пип?','Где торт в конце?'] },
   story2:{ t:'Text 12 · A Fine Trip — финал курса', art:'cake',
-    l:['Beth and Phil made a plan.','"Let us take the bike to the lake!"','','Beth got a big bag.','In the bag: a cake, chips and a dish.','','At the lake, Beth and Phil ate the cake.','Phil got a shell. The shell is thin and white.','Beth got a fish in a net.','','"This is a fine fish!" said Beth.','"That is a thin shell!" said Phil.','','Then it was time to go home.','Beth and Phil rode back.','"What a fine time!"'],
-    k:W('the a and said was to go what'), q:['Where did they go?','What was in the bag?','Who got a shell?','Was it a fine trip?'], qRu:['Куда они поехали?','Что было в сумке?','Кто нашёл ракушку?','Хорошая вышла поездка?'] } },
+    l:['Beth and Phil rode to the lake.','In the bag: a cake.','','Beth got a fish in a net.','"This is a fine fish!" said Beth.','','Then the fish gave a flip.','The fish is back in the lake.','','The cake is gone as well!','','"That fish got the cake!" said Phil.','','What a fine trip!'],
+    k:W('the a and said to what gone'), q:['Where did they go?','What did Beth get in the net?','Who got the cake?','Was it a fine trip?'], qRu:['Куда они поехали?','Кого Бет поймала сачком?','Кому достался торт?','Хорошая вышла поездка?'] } },
 
 
 { id:'cards', nav:'🖨 Карточки', c:'#6E7691', kind:'cards', art:'cards' },
