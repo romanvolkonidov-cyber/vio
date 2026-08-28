@@ -44,7 +44,7 @@ export const GROUPS = [
     ['u','/ʌ/',W('bug bun bus but cub cup cut fun hug mud mug run sun duck')]],
   spin:W('bad bag bat cab lad had ham hat fan fat ran rag rat back pack sack rack bed red leg ten net pet get hen beg den fed led met set let peg neck peck deck big bit dig fig fit hid him hip hit lid lip lit rib rid rip kick pick lick sick tick cod cop cot dog fog hog hop hot log lot rob rod rock lock sock dock bug bun bus but cub cup cut dug fun gum hug hum hut mud mug nut rub rug run sun tub duck luck tuck'),
   story:{ t:'Text 3 · The Bug in the Mug', art:'bug',
-    l:['Pip has a red mug.','A bug is in the mug!','','"Get up, bug!"','The bug is not sad.','The bug sits in the mug.','','Pip gets a big cup.','','The bug hops in the cup!','','Pip has no mug.','Pip has no cup.','','The bug is glad.'],
+    l:['Pip has a red mug.','A bug is in the mug!','','"Get up, bug!"','The bug sits.','','Pip gets a big cup.','','The bug hops in the cup!','','Pip has no mug.','Pip has no cup.','','The bug is glad.'],
     k:W('a the is has and'), q:['What is in the mug?','What does Pip get?','Who is glad at the end?'], qRu:['Кто сидит в кружке?','Что берёт Пип?','Кто радуется в конце?'] } },
 
 { id:'set4', nav:'Неделя 5', sub:'j v w x y z qu', c:'#A855F7', soft:'#F4EAFE', kind:'g', art:'duck',
@@ -62,7 +62,7 @@ export const GROUPS = [
       ['-ss','',W('miss kiss less mess boss fuss')],['-zz','',W('buzz fizz jazz fuzz')]] },
   spin:W('jam jab jag wag yam yak zap zag van wax jet vet web wed yes yet vex zip zig wig win wit fix six mix jig job jog jot box fox jug jut yum quiz quit quack buzz fizz jazz bell well tell fill hill doll miss kiss less mess off puff cuff'),
   story:{ t:'Text 4 · Fun in the Sun', art:'duck',
-    l:['It is hot. The sun is up.','Jack and Nan run up a hill.','','Nan has a red box.','In the box is a bun.','','A duck sits on a log.','Quack! Quack!','','The duck hops up.','The duck gets the bun!','','Jack and Nan run back.','The duck runs back as well.','','"Quack!"'],
+    l:['It is hot.','Jack and Nan run up a hill.','','Nan has a bun in a box.','','A duck sits on a log.','Quack! Quack!','','The duck gets the bun!','','Jack and Nan run back.','The duck runs back as well.','','"Quack!"'],
     k:W('the a has and'), q:['Where do Jack and Nan run?','What is in the box?','Who gets the bun?'], qRu:['Куда бегут Джек и Нэн?','Что лежит в коробке?','Кто утаскивает булку?'] } },
 
 { id:'drill', nav:'Неделя 6', sub:'повтор', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },

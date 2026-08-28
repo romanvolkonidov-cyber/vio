@@ -5,7 +5,7 @@
   "speed": 0.7,
   "lang": "en",
   "bucket": "violet-3e5a8.firebasestorage.app",
-  "generated": "2026-08-28T15:53:56.154Z",
+  "generated": "2026-08-28T16:00:01.214Z",
   "files": {
     "pat": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/pat-b775f9-537681ca.mp3",
     "cat. ship. this. cake.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/cat-ship-this-cake-54dc00-47f8373a.mp3",
@@ -159,9 +159,7 @@
     "luck": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/luck-8d3e97-7932f619.mp3",
     "tuck": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/tuck-7753a8-36804a76.mp3",
     "A bug is in the mug!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/a-bug-is-in-the-mug-61cb18-16854fa2.mp3",
-    "The bug is not sad.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-bug-is-not-sad-fad339-b5fcc27d.mp3",
     "Get up, bug!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/get-up-bug-38a5f3-78f59f7f.mp3",
-    "The bug sits in the mug.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-bug-sits-in-the-mug-311aa9-f2461cf0.mp3",
     "jab": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/jab-c2c6a3-ae00d542.mp3",
     "jam": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/jam-4a550b-57ea6978.mp3",
     "jag": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/jag-263a0f-ece1de1c.mp3",
@@ -218,7 +216,6 @@
     "quiz": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/quiz-f1a687-a513d1be.mp3",
     "quit": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/quit-31d735-c069cb30.mp3",
     "quack": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/quack-698a0b-8d94d40e.mp3",
-    "It is hot. The sun is up.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/it-is-hot-the-sun-is-up-65fac5-73df3af6.mp3",
     "A duck sits on a log.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/a-duck-sits-on-a-log-fa0ec8-f5b97cf6.mp3",
     "Quack! Quack!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/quack-quack-e399a4-24e465d5.mp3",
     "thin": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/thin-3485b2-15415ff8.mp3",
@@ -752,7 +749,6 @@
     "Pip has a red mug.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/pip-has-a-red-mug-ee0a4f-bee4b746.mp3",
     "Pip gets a big cup.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/pip-gets-a-big-cup-afdc4d-3bdeb68b.mp3",
     "Jack and Nan run up a hill.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/jack-and-nan-run-up-a-hill-6beba4-035301fb.mp3",
-    "Nan has a red box.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/nan-has-a-red-box-7c12a4-6ef3e3b9.mp3",
     "Jack and Nan run back.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/jack-and-nan-run-back-ca53d0-7680da1e.mp3",
     "Nan made a cake.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/nan-made-a-cake-963ccb-445e71d8.mp3",
     "The cake is huge!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-cake-is-huge-634202-d3c753dc.mp3",
@@ -775,8 +771,6 @@
     "The bug hops in the cup!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-bug-hops-in-the-cup-b6e85c-1c2a9c36.mp3",
     "Pip has no mug.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/pip-has-no-mug-2a8d3f-c7afe8d8.mp3",
     "The bug is glad.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-bug-is-glad-fe5136-7d639eed.mp3",
-    "The duck hops up.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-duck-hops-up-52ce7c-d27cb06c.mp3",
-    "In the box is a bun.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/in-the-box-is-a-bun-4415ff-888f5931.mp3",
     "The duck gets the bun!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-duck-gets-the-bun-6226e9-c8364713.mp3",
     "Quack!": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/quack-ff473a-815062dd.mp3",
     "The duck runs back as well.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-duck-runs-back-as-well-979c66-1de5c4d1.mp3",
@@ -808,6 +802,9 @@
     "Where does Mike end up?": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/where-does-mike-end-up-5be5f4-468f399c.mp3",
     "What does the kite do?": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/what-does-the-kite-do-788add-fc738372.mp3",
     "What did Beth get in the net?": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/what-did-beth-get-in-the-net-cb76d5-28ff9535.mp3",
-    "Who got the cake?": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/who-got-the-cake-06e38e-ef721202.mp3"
+    "Who got the cake?": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/who-got-the-cake-06e38e-ef721202.mp3",
+    "Nan has a bun in a box.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/nan-has-a-bun-in-a-box-965d48-9def1ed1.mp3",
+    "It is hot.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/it-is-hot-8c1fbf-814588fc.mp3",
+    "The bug sits.": "https://storage.googleapis.com/violet-3e5a8.firebasestorage.app/audio/the-bug-sits-533d64-543031d7.mp3"
   }
 }
