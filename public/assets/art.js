@@ -97,13 +97,12 @@ kite: s('0 0 120 120', `
   <path d="M68 108l12 4-12 4z" fill="#AED581" stroke="#33691E" stroke-width="3" stroke-linejoin="round"/>`),
 
 cake: s('0 0 120 120', `
-  <path d="M60 14v14" stroke="#F9A825" stroke-width="5" stroke-linecap="round"/>
-  <path d="M60 10c4 4 4 8 0 10-4-2-4-6 0-10z" fill="#FFCA28"/>
-  <rect x="56" y="26" width="8" height="16" rx="3" fill="#FFF176" stroke="#F9A825" stroke-width="3"/>
+  <g transform="translate(0,-18)">
   <path d="M22 56h76v14q-10 8-19 0t-19 0-19 0-19 0z" fill="#F48FB1" stroke="#AD1457" stroke-width="5" stroke-linejoin="round"/>
   <rect x="22" y="66" width="76" height="34" rx="8" fill="#FFE0B2" stroke="#8D6E63" stroke-width="5"/>
   <circle cx="40" cy="84" r="4" fill="#EF5350"/><circle cx="60" cy="88" r="4" fill="#66BB6A"/>
-  <circle cx="80" cy="84" r="4" fill="#42A5F5"/>`),
+  <circle cx="80" cy="84" r="4" fill="#42A5F5"/>
+  </g>`),
 
 pan: s('0 0 120 120', `
   <ellipse cx="52" cy="66" rx="34" ry="24" fill="#90A4AE" stroke="#37474F" stroke-width="5"/>

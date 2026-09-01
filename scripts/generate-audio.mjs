@@ -150,7 +150,7 @@ function pinned(text){
     (w) => `<phoneme alphabet="cmu-arpabet" ph="${PRON[w]}">${w}</phoneme>`);
 }
 
-async function tts(text, attempt = 1){
+async function tts(text, attempt = 1, relax = 0){
   const pin = pinned(text);
   // На flash_v2 уходят и слова с транскрипцией, и те, что просто читаются
   // верно только там. В склейке вроде «rid, ride» встречается и то и другое:
@@ -170,7 +170,7 @@ async function tts(text, attempt = 1){
       // Учебное чтение хочет ровно и чётко, а не выразительно: низкая
       // стабильность заставляет модель «играть», и на одном коротком слове
       // это выходит как случайное ударение.
-      voice_settings: { stability: 0.8, similarity_boost: 0.85, style: 0, use_speaker_boost: false, speed: API_SPEED }
+      voice_settings: { stability: relax ? 0.5 : 0.8, similarity_boost: 0.85, style: 0, use_speaker_boost: false, speed: API_SPEED }
     })
   });
   if (!r.ok) {
@@ -181,7 +181,16 @@ async function tts(text, attempt = 1){
     throw new Error(`HTTP ${r.status} ${(await r.text()).slice(0, 140)}`);
   }
   spent += Number(r.headers.get('character-cost') || 0);
-  return Buffer.from(await r.arrayBuffer());
+  const buffer = Buffer.from(await r.arrayBuffer());
+  // На некоторых коротких словах модель отдаёт чистую тишину — воспроизводимо,
+  // на тех же настройках. Так в курс уехало немое «I»: 200, правдоподобный
+  // размер, ноль звука. Простой повтор не поможет, поэтому меняем настройки:
+  // сперва стабильность, затем просим слово с точкой.
+  if (relax < 2 && isSilent(buffer)) {
+    console.log(`  ${text} — модель ответила тишиной, переспрашиваем`);
+    return tts(relax ? text + '.' : text, attempt, relax + 1);
+  }
+  return buffer;
 }
 
 /**
@@ -200,7 +209,24 @@ async function tts(text, attempt = 1){
  * перевалил −1 дБ. Динамика остаётся нетронутой.
  */
 const TARGET_MEAN_DB = -24;
+// Ниже этого в записи нет слова, а есть тишина: усиливать её бессмысленно.
+const SILENT_DB = -50;
 const PEAK_CEILING_DB = -1;
+
+/** Есть ли в записи звук вообще. Немой файл ничем не отличается от рабочего
+    по размеру и коду ответа — только по уровню, поэтому меряем. */
+function isSilent(buffer){
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vio-sil-'));
+  const f = path.join(dir, 'a.mp3');
+  try {
+    fs.writeFileSync(f, buffer);
+    const probe = spawnSync('ffmpeg', ['-i', f, '-af', 'volumedetect', '-f', 'null', '-'],
+      { encoding: 'utf8' }).stderr;
+    const mm = probe.match(/mean_volume:\s*(-?[\d.]+)/);
+    return !!mm && parseFloat(mm[1]) < SILENT_DB;
+  } catch { return false; }          // нет ffmpeg — не нам судить
+  finally { fs.rmSync(dir, { recursive: true, force: true }); }
+}
 
 function clean(buffer){
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vio-clean-'));
@@ -221,18 +247,27 @@ function clean(buffer){
       at('t.wav')], { stdio: 'ignore' });
 
     // volumedetect пишет в stderr, поэтому spawnSync.
-    const probe = spawnSync('ffmpeg', ['-i', at('t.wav'), '-af', 'volumedetect', '-f', 'null', '-'],
-      { encoding: 'utf8' }).stderr;
-    const mm = probe.match(/mean_volume:\s*(-?[\d.]+)/);
-    const pk = probe.match(/max_volume:\s*(-?[\d.]+)/);
-    // Подрезка иногда съедает всё: если запись почти тишина, измерять нечего.
-    // Раньше здесь падало на null, роняя весь прогон из-за одного файла.
-    if (!mm || !pk) return buffer;
-    const mean = parseFloat(mm[1]);
-    const peak = parseFloat(pk[1]);
-    const gain = Math.min(TARGET_MEAN_DB - mean, PEAK_CEILING_DB - peak);
+    const measure = (file) => {
+      const probe = spawnSync('ffmpeg', ['-i', file, '-af', 'volumedetect', '-f', 'null', '-'],
+        { encoding: 'utf8' }).stderr;
+      const mm = probe.match(/mean_volume:\s*(-?[\d.]+)/);
+      const pk = probe.match(/max_volume:\s*(-?[\d.]+)/);
+      return (mm && pk) ? { mean: parseFloat(mm[1]), peak: parseFloat(pk[1]) } : null;
+    };
 
-    execFileSync('ffmpeg', ['-y', '-i', at('t.wav'), '-af', `volume=${gain.toFixed(2)}dB`,
+    let stage = at('t.wav');
+    let lvl = measure(stage);
+    // Подрезка иногда срезает не воздух, а само слово: короткое «I» начинается
+    // слишком тихо и целиком уходит под порог. Дальше усиление послушно
+    // растягивало тишину до нужных децибел, и в курс уезжал немой файл.
+    // Если после подрезки не осталось ничего — берём неподрезанное: лучше
+    // слово с запасом воздуха, чем немое.
+    if (!lvl || lvl.mean < SILENT_DB) { stage = src; lvl = measure(stage); }
+    // Раньше здесь падало на null, роняя весь прогон из-за одного файла.
+    if (!lvl || lvl.mean < SILENT_DB) return buffer;
+    const gain = Math.min(TARGET_MEAN_DB - lvl.mean, PEAK_CEILING_DB - lvl.peak);
+
+    execFileSync('ffmpeg', ['-y', '-i', stage, '-af', `volume=${gain.toFixed(2)}dB`,
       '-c:a', 'libmp3lame', '-q:a', '4', at('out.mp3')], { stdio: 'ignore' });
     return fs.readFileSync(at('out.mp3'));
   } catch {
@@ -398,8 +433,13 @@ async function main(){
     let buffer;
     // Локальная копия — кэш. Файл пропал из бакета, но лежит рядом? Заливаем
     // его же, без нового запроса: кредиты тратим только на реально новое.
-    if (!FORCE && fs.existsSync(local)) buffer = await fsp.readFile(local);
-    else {
+    if (!FORCE && fs.existsSync(local)) {
+      const cached = await fsp.readFile(local);
+      // Немая запись, однажды попав в кэш, переживала любое число прогонов:
+      // файл на месте, значит новый запрос не нужен. Теперь не переживает.
+      if (!isSilent(cached)) buffer = cached;
+    }
+    if (!buffer) {
       buffer = job.kind === 'blend'
         ? stretchForBlend(await sourceFor(job.text))
         : clean(await tts(job.text));
