@@ -1,5 +1,6 @@
 import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords } from './data.js';
 import { art } from './art.js';
+import { ic } from './icons.js';
 
 /* ==================== СОСТОЯНИЕ ==================== */
 const LS = {
@@ -42,7 +43,7 @@ function toggleFluent(id){
 function paintFluent(){
   document.querySelectorAll('[data-fluent]').forEach(b=>{
     const on = fluent.has(b.dataset.fluent);
-    b.classList.toggle('on', on); b.textContent = on ? '✓ Бегло' : 'Бегло';
+    b.classList.toggle('on', on); b.innerHTML = on ? ic('check')+'Бегло' : 'Бегло';
     b.closest('.col')?.classList.toggle('done', on);
   });
   paintWeeks();
@@ -203,10 +204,14 @@ const panes = document.getElementById('panes'), segs = document.getElementById('
 GROUPS.forEach(g => {
   const b = document.createElement('button');
   b.className='seg'; b.dataset.go=g.id; b.style.setProperty('--c',g.c);
-  b.innerHTML = g.sub ? `<span>${g.nav}</span><i class="en">${g.sub}</i>` : `<span>${g.nav}</span>`;
+  const lbl = (g.icon ? ic(g.icon) : '') + g.nav;
+  b.innerHTML = g.sub ? `<span>${lbl}</span><i class="en">${g.sub}</i>` : `<span>${lbl}</span>`;
   b.onclick = () => show(g.id); segs.appendChild(b);
   const p = document.createElement('section');
   p.className='pane'; p.id='x-'+g.id;
+  // Один цвет главной кнопки на страницу — цвет недели. Раньше у каждого
+  // упражнения был свой: синий, зелёный, фиолетовый, оранжевый на одном экране.
+  p.style.setProperty('--c', g.id==='cards' ? '#3D7BFF' : g.c);
   p.innerHTML = g.kind==='today' ? ''
               : g.kind==='start' ? startHTML()
               : g.kind==='cards' ? cardsHTML()
@@ -251,11 +256,11 @@ function renderToday(){
   const story = g.story ? g.story.t.split('·').slice(1).join('·').trim() : null;
 
   const steps = [];
-  if(col) steps.push(['📊','Столбик <b class="en">'+esc(col)+'</b>','три прохода: медленно, быстрее, бегло']);
-  else    steps.push(['🔀','Повтор вперемешку','столбики закончились — проверьте их вразнобой']);
-  if(g.spin)  steps.push(['🎰','Спиннер','8–10 слов, ребёнок читает вслух']);
-  if(g.pairs) steps.push(['✨','Пары с немой e','короткое слово → добавили e → длинное']);
-  if(story)   steps.push(['📖',esc(story),'сначала читает ребёнок, потом слушаем Alice']);
+  if(col) steps.push(['columns-3','Столбик <b class="en">'+esc(col)+'</b>','три прохода: медленно, быстрее, бегло']);
+  else    steps.push(['shuffle','Повтор вперемешку','столбики закончились — проверьте их вразнобой']);
+  if(g.spin)  steps.push(['refresh-cw','Тренажёр слов','8–10 слов, ребёнок читает вслух']);
+  if(g.pairs) steps.push(['sparkles','Пары с немой e','короткое слово → добавили e → длинное']);
+  if(story)   steps.push(['book-open',esc(story),'сначала читает ребёнок, потом слушаем Alice']);
 
   pane.innerHTML = `
 <div class="card hero" style="--t:#E7F0FF;--c:#3D7BFF">
@@ -270,18 +275,18 @@ function renderToday(){
 </div>
 
 <div class="card">
-  <h2 class="sec"><span class="emo">⏱</span> Что делаем</h2>
+  <h2 class="sec"><span class="emo">${ic('timer')}</span> Что делаем</h2>
   <ol class="plan">${steps.map(([e,a,b])=>
-    `<li><span class="pe">${e}</span><span><b>${a}</b><i>${b}</i></span></li>`).join('')}</ol>
+    `<li><span class="pe">${ic(e)}</span><span><b>${a}</b><i>${b}</i></span></li>`).join('')}</ol>
   <div class="bar" style="justify-content:flex-start">
-    <button class="btn" data-today="go">▶ Начать занятие</button>
-    ${first ? '' : '<button class="btn soft sm" data-today="drill">🎯 Тренировка</button>'}
+    <button class="btn" data-today="go">${ic('play')}Начать занятие</button>
+    ${first ? '' : '<button class="btn soft sm" data-today="drill">'+ic('target')+'Тренировка</button>'}
   </div>
   ${doneAll ? '<p class="hint">Все столбики этого набора отмечены беглыми. Пройдите тренировку вперемешку — и переходите к следующей неделе.</p>' : ''}
 </div>
 
 <div class="list">
-  <details class="row"><summary><span class="emo">🔤</span> Три правила, без которых не работает</summary>
+  <details class="row"><summary><span class="emo">${ic('type')}</span> Три правила, без которых не работает</summary>
     <div class="body"><ul>
       <li><b>Звук, а не название буквы.</b> Не «эм», а /m/. Иначе <span class="en">cat</span> превратится в «си-эй-ти».</li>
       <li><b>Без призвука «э».</b> Не «бэ», «дэ», «кэ» — резко и почти шёпотом.</li>
@@ -301,19 +306,19 @@ function startHTML(){ return `
     <p class="sub">Через 12 недель он прочитает английское слово, которое видит впервые. Мама ведёт занятие: 15 минут в день, по одной вкладке сверху.</p>
   </div>
   <div class="rules">
-    <div class="rl"><b>🔤 Звук, а не буква</b><span>Не «эм», а /m/. Названия букв — потом, иначе <span class="en">cat</span> станет «си-эй-ти».</span></div>
-    <div class="rl"><b>🤫 Без призвука «э»</b><span>Не «бэ», «дэ», «кэ». Взрывные /p/ /b/ /t/ /d/ /k/ /g/ — резко и почти шёпотом.</span></div>
-    <div class="rl"><b>⏱ 15 минут ежедневно</b><span>Частота важнее длительности. Час в воскресенье не работает.</span></div>
-    <div class="rl"><b>👀 Сначала прочитал</b><span>Ребёнок озвучивает слово и только потом вспоминает смысл. Перевод — в конце.</span></div>
+    <div class="rl"><b>${ic('type')}Звук, а не буква</b><span>Не «эм», а /m/. Названия букв — потом, иначе <span class="en">cat</span> станет «си-эй-ти».</span></div>
+    <div class="rl"><b>${ic('volume-1')}Без призвука «э»</b><span>Не «бэ», «дэ», «кэ». Взрывные /p/ /b/ /t/ /d/ /k/ /g/ — резко и почти шёпотом.</span></div>
+    <div class="rl"><b>${ic('timer')}15 минут ежедневно</b><span>Частота важнее длительности. Час в воскресенье не работает.</span></div>
+    <div class="rl"><b>${ic('eye')}Сначала прочитал</b><span>Ребёнок озвучивает слово и только потом вспоминает смысл. Перевод — в конце.</span></div>
   </div>
 </div>
 
 <div class="card">
-  <h2 class="sec"><span class="emo">📊</span> Как читать таблицы слов</h2>
+  <h2 class="sec"><span class="emo">${ic('columns-3')}</span> Как читать таблицы слов</h2>
   <p class="sub"><b>Столбиками, сверху вниз. Не строками.</b> В каждом столбике одна и та же гласная — ребёнок перестаёт перебирать гласные и меняет только согласные.</p>
   <ol class="steps">
     <li>Покажите на шапку столбика: «Здесь везде /a/». Ребёнок повторяет звук три раза.</li>
-    <li>Читаем столбик сверху вниз, медленно. Кнопка <b>▶</b> подсвечивает слова по очереди и держит темп.</li>
+    <li>Читаем столбик сверху вниз, медленно. Кнопка <b>${ic('play')}</b> подсвечивает слова по очереди и держит темп.</li>
     <li>Тот же столбик ещё раз, быстрее. И третий раз — бегло.</li>
     <li>Следующий столбик. Так же, три прохода.</li>
     <li>Когда все столбики бегло — читаем <b>строками</b>, слева направо. Это проверка.</li>
@@ -322,31 +327,31 @@ function startHTML(){ return `
 </div>
 
 <div class="list">
-  <details class="row"><summary><span class="emo">📋</span> Мелочи, которые решают</summary>
+  <details class="row"><summary><span class="emo">${ic('clipboard-list')}</span> Мелочи, которые решают</summary>
     <div class="body"><ul>
       <li>Закрывайте соседние столбики листком бумаги.</li>
       <li>Запнулся — <b>не подсказывайте слово целиком</b>. Ткните в первую букву: «Какой звук?»</li>
       <li>Один столбик за раз. Не проходите всю таблицу в первый день.</li>
       <li>Столбик освоен, если читается сверху вниз <b>и</b> снизу вверх без пауз.</li>
     </ul></div></details>
-  <details class="row"><summary><span class="emo">🎰</span> Что делать со спиннером</summary>
+  <details class="row"><summary><span class="emo">${ic('refresh-cw')}</span> Что делать со спиннером</summary>
     <div class="body"><ol>
       <li><b>Просто крути.</b> Барабаны останавливаются по очереди слева направо — слово собирается в том же порядке, в каком ребёнок его читает.</li>
-      <li><b>Меняем одну деталь.</b> Кнопки ↻ под Onset и Ending крутят только один барабан, гласная стоит на месте.</li>
+      <li><b>Меняем одну деталь.</b> Кнопки ${ic('rotate-ccw')} под «Начало» и «Конец» крутят только один барабан, гласная стоит на месте.</li>
       <li><b>Слить по звукам.</b> Части подсвечиваются по очереди: сначала ребёнок называет части, потом слово целиком.</li>
     </ol>
     <p style="margin:8px 0 0">Спиннер собирает слова только из пройденных звуков — незнакомого не выпадет.</p></div></details>
-  <details class="row"><summary><span class="emo">🔊</span> Как работает озвучка</summary>
+  <details class="row"><summary><span class="emo">${ic('volume-2')}</span> Как работает озвучка</summary>
     <div class="body">
-      <p style="margin:0 0 8px">Слова читает <b>Alice</b> — живой британский голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — в ⚙︎.</p>
+      <p style="margin:0 0 8px">Слова читает <b>Alice</b> — живой британский голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — кнопка ${ic('sliders-horizontal')} вверху справа.</p>
       <p style="margin:0"><b>Отдельные звуки не озвучиваются намеренно.</b> Синтез читает их как названия букв — «си» вместо /k/ — и это сломало бы метод. Звуки произносит взрослый по подсказкам в карточке набора.</p></div></details>
-  <details class="row"><summary><span class="emo">🧩</span> Проверка: бессмысленные слова</summary>
+  <details class="row"><summary><span class="emo">${ic('puzzle')}</span> Проверка: бессмысленные слова</summary>
     <div class="body"><p style="margin:0 0 8px">Если ребёнок читает выдуманные слова — он декодирует, а не угадывает. Скажите: «Это слова из языка роботов».</p>
     <p class="en" style="font-size:20px;font-weight:700;color:var(--ink);margin:0">vap · zib · fom · dut · nes · quz · lig · mub · tesh · chid</p></div></details>
 </div>
 
 <div class="card">
-  <h2 class="sec"><span class="emo">🗓</span> Маршрут на 12 недель</h2>
+  <h2 class="sec"><span class="emo">${ic('calendar-days')}</span> Маршрут на 12 недель</h2>
   <div class="weeks">
     ${[['1','Набор 1','Text 1','set1'],['2','Набор 2','Text 2','set2'],['3–4','Набор 3','Text 3','set3'],
        ['5','Набор 4','Text 4','set4'],['6','Повтор 1–4','проверка','drill'],['7–8','th','Text 5','th'],
@@ -370,10 +375,10 @@ function groupHTML(g){
     <div class="chips">${g.sounds.map(([l,i])=>`<div class="chip" style="--c:${g.c}"><b class="en">${esc(l)}</b><i>${esc(i)}</i></div>`).join('')}</div>
     <div class="artic">${g.sounds.map(([l,i,t])=>`<b>${esc(l)}</b> — ${esc(t)}`).join(' · ')}</div>
   </div>`;
-  if(g.cols) h += `<div class="card"><h2 class="sec"><span class="emo">📊</span> Слова · читаем столбиками</h2>
+  if(g.cols) h += `<div class="card"><h2 class="sec"><span class="emo">${ic('columns-3')}</span> Слова · читаем столбиками</h2>
     <p class="sub" style="margin-bottom:11px">Три прохода по каждому столбику, и только потом — строками.</p>${colsHTML(g.cols, g.id)}</div>`;
   if(g.extra) h += `<div class="card"><h2 class="sec">${esc(g.extra.t)}</h2>${colsHTML(g.extra.cols, g.id+'+')}</div>`;
-  if(g.wall) h += `<div class="card"><h2 class="sec"><span class="emo">🔤</span> Стена слов</h2>
+  if(g.wall) h += `<div class="card"><h2 class="sec"><span class="emo">${ic('type')}</span> Стена слов</h2>
     <p class="sub" style="margin-bottom:13px">Спиннера здесь нет: слова с <span class="en">ph</span> длиннее CVC, их берут целиком. Нажмите — прозвучит.</p>
     <div class="wall">${g.wall.map(w=>`<button class="pill" data-say="${esc(w)}">${w.replace(/([Pp])h/,'<u>$1h</u>')}</button>`).join('')}</div></div>`;
   if(g.spin) h += spinHTML(g);
@@ -382,7 +387,7 @@ function groupHTML(g){
   if(g.story3) h += storyHTML(g.story3);   // порядок по номеру текста, а не по имени поля
   if(g.story2) h += storyHTML(g.story2);
   h += `<div class="card" style="text-align:center">
-    <h2 class="sec" style="justify-content:center"><span class="emo">✅</span> На сегодня всё</h2>
+    <h2 class="sec" style="justify-content:center"><span class="emo">${ic('circle-check')}</span> На сегодня всё</h2>
     <p class="sub">Пятнадцати минут достаточно. Отметьте пройденный столбик кнопкой «Бегло» — и приложение само скажет, с чего начать завтра.</p>
     <div class="bar"><button class="btn soft" data-finish>Закончить занятие</button></div></div>`;
   return h;
@@ -390,10 +395,14 @@ function groupHTML(g){
 /* Панели строятся сразу при загрузке модуля, до этих строк, поэтому здесь
    объявления функций, а не const-стрелки: стрелка в этот момент ещё в
    временной мёртвой зоне, и первый же набор со столбиками рушил всю отрисовку. */
-function colsHTML(cols, gid){ return `<div class="cols">${cols.map(([head,ipa,ws])=>`<div class="col" data-col="${esc(gid+'/'+head)}">
+function colsHTML(cols, gid){
+  // Один длинный столбик (слова-обманщики) узкой лентой посреди широкой
+  // карточки выглядел забытым — раскладываем его сеткой на всю ширину.
+  const one = cols.length===1 && cols[0][2].length>6;
+  return `<div class="cols${one?' one':''}">${cols.map(([head,ipa,ws])=>`<div class="col" data-col="${esc(gid+'/'+head)}">
   <div class="chead"><span class="en">${esc(head)}</span>${ipa?`<i>${esc(ipa)}</i>`:''}</div>
-  ${ws.map(w=>`<button class="word en" data-say="${esc(w)}">${esc(w)}</button>`).join('')}
-  <button class="walk" data-walk>▶ Пройти</button>
+  <div class="wl">${ws.map(w=>`<button class="word en" data-say="${esc(w)}">${esc(w)}</button>`).join('')}</div>
+  <button class="walk" data-walk>${ic('play')}Пройти</button>
   <button class="fluent" data-fluent="${esc(gid+'/'+head)}">Бегло</button></div>`).join('')}</div>
 <p class="hint" style="margin-top:2px">Жмите «Бегло», когда столбик читается сверху вниз <b>и</b> снизу вверх без пауз. Это единственный признак, что пора дальше.</p>`; }
 
@@ -402,14 +411,14 @@ function spinHTML(g){ return `<div class="spin" data-spin="${g.id}">
   <div class="sw en" data-w>—</div>
   <div class="pips"><i></i><i></i><i></i></div>
   <div class="tiles">
-    <div class="tw"><div class="tlab">Onset</div><div class="tile" data-t="0"><div class="strip"></div></div><button class="re" data-re="0">↻</button></div>
-    <div class="tw"><div class="tlab">Vowel</div><div class="tile v" data-t="1"><div class="strip"></div></div><button class="re gh">↻</button></div>
-    <div class="tw"><div class="tlab">Ending</div><div class="tile" data-t="2"><div class="strip"></div></div><button class="re" data-re="2">↻</button></div>
+    <div class="tw"><div class="tlab">Начало</div><div class="tile" data-t="0"><div class="strip"></div></div><button class="re" data-re="0" aria-label="Другое начало">${ic('rotate-ccw')}</button></div>
+    <div class="tw"><div class="tlab">Гласная</div><div class="tile v" data-t="1"><div class="strip"></div></div><button class="re gh">${ic('rotate-ccw')}</button></div>
+    <div class="tw"><div class="tlab">Конец</div><div class="tile" data-t="2"><div class="strip"></div></div><button class="re" data-re="2" aria-label="Другой конец">${ic('rotate-ccw')}</button></div>
   </div>
   <div class="bar">
-    <button class="btn" data-a="spin" style="background:${g.c};box-shadow:0 5px 14px ${g.c}55">🎰 Новое слово</button>
-    <button class="btn soft sm" data-a="blend">🐛 Слить по звукам</button>
-    <button class="btn soft sm" data-a="say">🔊</button>
+    <button class="btn" data-a="spin">${ic('refresh-cw')}Новое слово</button>
+    <button class="btn soft sm" data-a="blend">${ic('audio-waveform')}Слить по звукам</button>
+    <button class="btn soft sm" data-a="say" aria-label="Послушать">${ic('volume-2')}</button>
   </div>
   <p class="hint" style="margin:9px 0 0">«Слить» тянет слово целиком — <span class="en">сссаааат</span> — и сразу повторяет в обычном темпе. Звуки не разрываются намеренно: если произнести <span class="en">/t/</span> отдельно, получится «тэ», и ребёнок начнёт слышать лишний гласный там, где его нет.</p>
   <div class="bank"><div class="bhead"><span class="t">Слова набора</span><span class="cnt" data-cnt></span>
@@ -420,9 +429,9 @@ function pairHTML(g){ return `<div class="spin" data-pair="${g.id}">
   <div class="kick" style="--c:${g.c}">Тренажёр пар</div>
   <div class="pair"><div class="pw en" data-s>—</div><div class="arw">+e</div><div class="pw en off" data-l>—</div></div>
   <div class="bar">
-    <button class="btn pur" data-p="add">✨ Добавить e</button>
+    <button class="btn pur" data-p="add">${ic('plus')}Добавить e</button>
     <button class="btn soft" data-p="spin">Новая пара</button>
-    <button class="btn soft sm" data-p="say">🔊</button>
+    <button class="btn soft sm" data-p="say" aria-label="Послушать">${ic('volume-2')}</button>
   </div>
   <div class="bank"><div class="bhead"><span class="t">Пары набора</span><span class="cnt" data-pcnt></span>
     <button class="re" data-p="reset">Сбросить</button></div>
@@ -436,7 +445,7 @@ function storyHTML(s){ return `<div class="card story">
   <div class="trk"><span class="l">Хитрецы</span>${s.k.map(t=>`<span class="tw2 en">${esc(t)}</span>`).join('')}</div>
   <ol class="qs">${s.q.map((q,i)=>`<li><button class="qq en" data-say="${esc(q)}">${esc(q)}</button>`+
     `${s.qRu&&s.qRu[i]?`<span class="qru">${esc(s.qRu[i])}</span>`:''}</li>`).join('')}</ol>
-  <div class="bar" style="justify-content:flex-start"><button class="btn soft sm" data-read>▶ Прочитать вслух</button></div></div>`; }
+  <div class="bar" style="justify-content:flex-start"><button class="btn soft sm" data-read>${ic('play')}Прочитать вслух</button></div></div>`; }
 
 function cardsHTML(){
   const gs=[...new Set(CARDS.map(c=>c[0]))];
@@ -445,9 +454,9 @@ function cardsHTML(){
     <div class="inner"><div class="kick">Печать</div><h1 class="big">Карточки со звуками</h1>
     <p class="sub">Девять карточек на лист A4 с пунктиром для разреза: картинка, звук, слово-якорь. Названия букв на карточках нет намеренно.</p></div>
     <div class="pick">${gs.map(g=>`<button class="pk on" data-set="${esc(g)}">${esc(g)}</button>`).join('')}</div>
-    <button class="btn" data-print>🖨 Распечатать</button></div>
+    <button class="btn" data-print style="--c:#3D7BFF">${ic('printer')}Распечатать</button></div>
   <div class="card"><h2 class="sec">Предпросмотр</h2><div class="fgrid" id="fgrid" style="margin-top:13px"></div></div>
-  <div class="list"><details class="row" open><summary><span class="emo">✂️</span> Как пользоваться</summary><div class="body"><ul>
+  <div class="list"><details class="row" open><summary><span class="emo">${ic('scissors')}</span> Как пользоваться</summary><div class="body"><ul>
     <li>Разрежьте по пунктиру, затем отогните назад полоску со словом — по точечной линии. Слово окажется на обороте, лицом к вам: оно и напечатано перевёрнутым, чтобы после загиба читалось правильно. Наклейте на картон.</li>
     <li>Разминка 30 секунд в начале занятия: показываете карточку — ребёнок говорит <b>звук</b>, не название буквы.</li>
     <li>Слово-якорь — подсказка для взрослого, на обороте. Ребёнок видит только картинку и букву.</li>
@@ -641,10 +650,10 @@ document.addEventListener('click', ev=>{
   const wb = ev.target.closest('[data-walk]');
   if(wb){ const col=wb.closest('.col'), ws=[...col.querySelectorAll('.word')];
     stopWalk();
-    if(wb.dataset.on){ wb.dataset.on=''; wb.textContent='▶ Пройти'; return; }
-    document.querySelectorAll('[data-walk]').forEach(b=>{b.dataset.on='';b.textContent='▶ Пройти';});
-    wb.dataset.on='1'; wb.textContent='⏸ Стоп';
-    walkThrough(ws, w=>w.textContent, 900, ()=>{ wb.dataset.on=''; wb.textContent='▶ Пройти'; }); }
+    if(wb.dataset.on){ wb.dataset.on=''; wb.innerHTML=ic('play')+'Пройти'; return; }
+    document.querySelectorAll('[data-walk]').forEach(b=>{b.dataset.on='';b.innerHTML=ic('play')+'Пройти';});
+    wb.dataset.on='1'; wb.innerHTML=ic('pause')+'Стоп';
+    walkThrough(ws, w=>w.textContent, 900, ()=>{ wb.dataset.on=''; wb.innerHTML=ic('play')+'Пройти'; }); }
 
   const rd = ev.target.closest('[data-read]');
   if(rd){ const ls=[...rd.closest('.story').querySelectorAll('.ln')];
@@ -652,7 +661,11 @@ document.addEventListener('click', ev=>{
 
   const pk = ev.target.closest('[data-set]');
   if(pk){ pk.classList.toggle('on'); renderCards(); }
-  if(ev.target.closest('[data-print]')){ renderCards(); setTimeout(()=>window.print(),80); }
+  if(ev.target.closest('[data-print]')){ renderCards();
+    // Картинки теперь файлы, а не эмодзи: печать до их загрузки дала бы пустые карточки
+    const imgs=[...document.querySelectorAll('#printsheet img')];
+    Promise.all(imgs.map(i=>i.complete ? 1 : new Promise(r=>{ i.onload=i.onerror=r; })))
+      .then(()=>setTimeout(()=>window.print(),80)); }
 });
 
 /* ==================== КАРТОЧКИ ==================== */
@@ -660,9 +673,9 @@ function renderCards(){
   const on = [...document.querySelectorAll('[data-set]')].filter(b=>b.classList.contains('on')).map(b=>b.dataset.set);
   const list = CARDS.filter(c=>on.includes(c[0]));
   const g = document.getElementById('fgrid');
-  if(g) g.innerHTML = list.map(([a,l,w,e,v])=>`<div class="fc"><div class="e">${e}</div><div class="l en ${v?'v':''}">${esc(l)}</div><div class="w en">${esc(w)}</div></div>`).join('');
+  if(g) g.innerHTML = list.map(([a,l,w,e,v])=>`<div class="fc"><div class="e"><img src="assets/cards/${esc(e)}.svg" alt="" loading="lazy"></div><div class="l en ${v?'v':''}">${esc(l)}</div><div class="w en">${esc(w)}</div></div>`).join('');
   document.getElementById('printsheet').innerHTML = '<div class="pg">' + list.map(([a,l,w,e])=>
-    `<div class="pc"><div class="face"><div class="e">${e}</div><div class="l">${esc(l)}</div></div>` +
+    `<div class="pc"><div class="face"><div class="e"><img src="assets/cards/${esc(e)}.svg" alt=""></div><div class="l">${esc(l)}</div></div>` +
      `<div class="w">${esc(w)}</div></div>`).join('') + '</div>';
   markEnglish(g);
 }
@@ -706,26 +719,26 @@ function drillHTML(){
 </div>
 
 <div class="card" data-drill="review">
-  <h2 class="sec"><span class="emo">🔀</span> Повтор вперемешку</h2>
+  <h2 class="sec"><span class="emo">${ic('shuffle')}</span> Повтор вперемешку</h2>
   <p class="sub">Слова вперемешку, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему. Берутся только пройденные наборы.</p>
   <div class="dbig en" data-word>—</div>
   <p class="hint" data-pool style="margin:0 0 10px"></p>
   <div class="bar" style="justify-content:flex-start">
-    <button class="btn" data-d="next" style="background:#0EA5E9;box-shadow:0 5px 14px #0EA5E955">🔀 Новое слово</button>
-    <button class="btn soft sm" data-d="say">🔊 Проверить</button>
-    <button class="btn soft sm" data-d="blend">🐛 Слить</button>
+    <button class="btn" data-d="next">${ic('shuffle')}Новое слово</button>
+    <button class="btn soft sm" data-d="say">${ic('volume-2')}Проверить</button>
+    <button class="btn soft sm" data-d="blend">${ic('audio-waveform')}Слить</button>
   </div>
   <p class="hint">Сначала читает ребёнок, потом проверяем кнопкой. Не наоборот.</p>
 </div>
 
 <div class="card" data-drill="tricky">
-  <h2 class="sec"><span class="emo">🃏</span> Слова-обманщики</h2>
+  <h2 class="sec"><span class="emo">${ic('layers')}</span> Слова-обманщики</h2>
   <p class="sub">Правило на них не работает — их берут узнаванием. Это самые частые слова языка: пока они не узнаются мгновенно, беглости не будет.</p>
   <div class="dbig en" data-word>—</div>
   <div class="bar" style="justify-content:flex-start">
-    <button class="btn" data-d="know" style="background:#22C55E;box-shadow:0 5px 14px #22C55E55">✓ Знает</button>
-    <button class="btn soft" data-d="again">↻ Ещё раз</button>
-    <button class="btn soft sm" data-d="say">🔊</button>
+    <button class="btn" data-d="know">${ic('check')}Знает</button>
+    <button class="btn soft" data-d="again">${ic('rotate-ccw')}Ещё раз</button>
+    <button class="btn soft sm" data-d="say" aria-label="Послушать">${ic('volume-2')}</button>
   </div>
   <div class="bank"><div class="bhead"><span class="t">Колода</span><span class="cnt" data-cnt></span>
     <button class="re" data-d="reset">Сбросить</button></div>
@@ -733,24 +746,24 @@ function drillHTML(){
 </div>
 
 <div class="card" data-drill="dictation">
-  <h2 class="sec"><span class="emo">✍️</span> Диктант</h2>
+  <h2 class="sec"><span class="emo">${ic('pencil-line')}</span> Диктант</h2>
   <p class="sub">Слово звучит, ребёнок пишет на бумаге, потом сверяем. Обратная операция закрепляет чтение быстрее повторного чтения и сразу показывает, какой звук на самом деле не различается.</p>
   <div class="dbig en hide" data-word>—</div>
   <div class="bar" style="justify-content:flex-start">
-    <button class="btn" data-d="play" style="background:#A855F7;box-shadow:0 5px 14px #A855F755">🔊 Сказать слово</button>
-    <button class="btn soft" data-d="show">👁 Показать</button>
+    <button class="btn" data-d="play">${ic('volume-2')}Сказать слово</button>
+    <button class="btn soft" data-d="show">${ic('eye')}Показать</button>
     <button class="btn soft sm" data-d="next">Дальше</button>
   </div>
   <p class="hint">Кнопку «Показать» нажимает ребёнок сам — после того как написал.</p>
 </div>
 
 <div class="card" data-drill="pairs">
-  <h2 class="sec"><span class="emo">👂</span> Пары гласных</h2>
+  <h2 class="sec"><span class="emo">${ic('ear')}</span> Пары гласных</h2>
   <p class="sub">Звучит одно слово из двух. Ребёнок выбирает, какое услышал. Здесь проверяется слух, а не чтение.</p>
   <div class="pickrow" data-groups></div>
   <div class="dpair" data-pairbox></div>
   <div class="bar" style="justify-content:flex-start">
-    <button class="btn" data-d="play" style="background:#FF9F1C;box-shadow:0 5px 14px #FF9F1C55">🔊 Ещё раз</button>
+    <button class="btn" data-d="play">${ic('volume-2')}Ещё раз</button>
     <button class="btn soft" data-d="next">Новая пара</button>
   </div>
   <p class="hint" data-tip></p>
@@ -873,7 +886,7 @@ function closeSheet(){ sheet.classList.remove('on'); scrim.classList.remove('on'
 function setStat(t,k){ const s=$('stat'); if(!s) return; s.textContent=t; s.className='stat'+(k?' '+k:''); }
 
 $('mute').onclick = function(){ audioOn=!audioOn; this.classList.toggle('on',audioOn);
-  this.textContent = audioOn?'🔊':'🔇'; if(!audioOn) stopAudio(); LS.set('audio',audioOn); };
+  this.innerHTML = ic(audioOn?'volume-2':'volume-x'); if(!audioOn) stopAudio(); LS.set('audio',audioOn); };
 $('rate').oninput = function(){ rate=this.value/100; LS.set('rate',rate); labelRate(); };
 /* Файлы уже записаны медленнее обычной речи, поэтому подписываем не множитель
    ползунка, а то, что получится на выходе — иначе «1,00×» читалось бы как
@@ -895,7 +908,15 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   audioOn = LS.get('audio',true);
   rate    = LS.get('rate',1);
   $('rate').value = Math.round(rate*100);
-  $('mute').classList.toggle('on',audioOn); $('mute').textContent = audioOn?'🔊':'🔇';
+  $('mute').classList.toggle('on',audioOn); $('mute').innerHTML = ic(audioOn?'volume-2':'volume-x');
+  $('gear').innerHTML = ic('sliders-horizontal');
+  // Ученику на rv2class курс открывается во весь экран, без шапки сайта, —
+  // значит, выйти из аккаунта нужно отсюда. Сам выход делает сайт: курс лишь
+  // просит его об этом, у кадра нет доступа к логину.
+  if(new URLSearchParams(location.search).get('embed')==='student' && window.parent!==window){
+    $('out').hidden=false; $('out').innerHTML=ic('log-out');
+    $('out').onclick=()=>window.parent.postMessage({type:'rv-logout'}, location.origin);
+  } document.querySelector('#sheet h2.sec').innerHTML = ic('mic') + 'Голос';
 
   // Свой манифест — тот, что уехал с деплоем; копия в бакете спасает, если
   // озвучку пересобрали, а хостинг ещё не выкатили.

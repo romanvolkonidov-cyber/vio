@@ -1,11 +1,12 @@
 // Офлайн-кэш. Приложение и вся озвучка работают без интернета после первого захода.
 // Озвучка живёт в Cloud Storage, поэтому кэшируем и чужой origin — иначе
 // каждое слово каждый раз ходило бы в сеть.
-const CACHE = 'rwm-v1';
+const CACHE = 'rwm-v2';
 const AUDIO_HOST = 'storage.googleapis.com';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
-  './assets/styles.css', './assets/app.js', './assets/data.js', './assets/art.js'
+  './assets/styles.css', './assets/app.js', './assets/data.js', './assets/art.js',
+  './assets/icons.js'
 ];
 
 self.addEventListener('install', e => {

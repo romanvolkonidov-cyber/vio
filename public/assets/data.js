@@ -4,7 +4,7 @@ const W = s => s.trim().split(/\s+/);
 export const VOICE_DEFAULT = 'Xb7hH8MSUJpSbSDYk0k2'; // Alice — clear, engaging educator, en-GB
 
 export const GROUPS = [
-{ id:'today', nav:'⭐ Сегодня', c:'#3D7BFF', kind:'today', art:'sun' },
+{ id:'today', nav:'Сегодня', icon:'calendar-check', c:'#3D7BFF', kind:'today', art:'sun' },
 
 { id:'set1', nav:'Неделя 1', sub:'s a t p i n', c:'#3D7BFF', soft:'#E7F0FF', kind:'g', art:'cat',
   num:'Набор 1', title:'s · a · t · p · i · n',
@@ -144,25 +144,28 @@ export const GROUPS = [
     k:W('the a and said to what gone'), q:['Where did they go?','What did Beth get in the net?','Who got the cake?','Was it a fine trip?'], qRu:['Куда они поехали?','Кого Бет поймала сачком?','Кому достался торт?','Хорошая вышла поездка?'] } },
 
 
-{ id:'cards', nav:'🖨 Карточки', c:'#6E7691', kind:'cards', art:'cards' },
+{ id:'cards', nav:'Карточки', icon:'printer', c:'#6E7691', kind:'cards', art:'cards' },
 
-{ id:'start', nav:'📖 Как это работает', c:'#F59E0B', kind:'start', art:'sun' }
+{ id:'start', nav:'Как это работает', icon:'book-open', c:'#F59E0B', kind:'start', art:'sun' }
 ];
 
+/* Четвёртое поле — картинка: assets/cards/<имя>.svg (Fluent Emoji Flat, MIT).
+   Раньше здесь стояли эмодзи: на каждом телефоне свои, а на бумаге — самое
+   дешёвое, что было в курсе. У торта — кусок без свечи, как и в иллюстрации. */
 export const CARDS = [
- ['Набор 1','s','sun','☀️'],['Набор 1','a','apple','🍎',1],['Набор 1','t','tap','🚰'],
- ['Набор 1','p','pig','🐷'],['Набор 1','i','ink','🖋️',1],['Набор 1','n','net','🥅'],
- ['Набор 2','m','man','🧍'],['Набор 2','d','dog','🐶'],['Набор 2','g','gas','⛽'],
- ['Набор 2','o','octopus','🐙',1],['Набор 2','c','cat','🐱'],['Набор 2','k','kid','🧒'],
- ['Набор 3','ck','duck','🦆'],['Набор 3','e','egg','🥚',1],['Набор 3','u','umbrella','☂️',1],
- ['Набор 3','r','run','🏃'],['Набор 3','h','hat','🎩'],['Набор 3','b','bed','🛏️'],
- ['Набор 3','f','fan','🪭'],['Набор 3','l','leg','🦵'],
- ['Набор 4','j','jam','🍓'],['Набор 4','v','van','🚐'],['Набор 4','w','web','🕸️'],
- ['Набор 4','x','box','📦'],['Набор 4','y','yes','👍'],['Набор 4','z','zip','🧷'],['Набор 4','qu','queen','👑'],
- ['Диграфы','th','thin','🪡'],['Диграфы','th','this','👉'],['Диграфы','ch','chip','🍟'],
- ['Диграфы','sh','ship','🚢'],['Диграфы','ph','photo','📷'],
- ['Немая e','a_e','cake','🎂',1],['Немая e','i_e','kite','🪁',1],['Немая e','o_e','bone','🦴',1],
- ['Немая e','u_e','cube','🧊',1],['Немая e','e_e','Pete','🧑',1]
+ ['Набор 1','s','sun','sun'],['Набор 1','a','apple','apple',1],['Набор 1','t','tap','tap'],
+ ['Набор 1','p','pig','pig'],['Набор 1','i','ink','ink',1],['Набор 1','n','net','net'],
+ ['Набор 2','m','man','man'],['Набор 2','d','dog','dog'],['Набор 2','g','gas','gas'],
+ ['Набор 2','o','octopus','octopus',1],['Набор 2','c','cat','cat'],['Набор 2','k','kid','kid'],
+ ['Набор 3','ck','duck','duck'],['Набор 3','e','egg','egg',1],['Набор 3','u','umbrella','umbrella',1],
+ ['Набор 3','r','run','run'],['Набор 3','h','hat','hat'],['Набор 3','b','bed','bed'],
+ ['Набор 3','f','fan','fan'],['Набор 3','l','leg','leg'],
+ ['Набор 4','j','jam','jam'],['Набор 4','v','van','van'],['Набор 4','w','web','web'],
+ ['Набор 4','x','box','box'],['Набор 4','y','yes','yes'],['Набор 4','z','zip','zip'],['Набор 4','qu','queen','queen'],
+ ['Диграфы','th','thin','thin'],['Диграфы','th','this','this'],['Диграфы','ch','chip','chip'],
+ ['Диграфы','sh','ship','ship'],['Диграфы','ph','photo','photo'],
+ ['Немая e','a_e','cake','cake',1],['Немая e','i_e','kite','kite',1],['Немая e','o_e','bone','bone',1],
+ ['Немая e','u_e','cube','cube',1],['Немая e','e_e','Pete','Pete',1]
 ];
 
 /* ==================== ПОЧЕМУ ЗВУКИ НЕ ОЗВУЧЕНЫ ====================
