@@ -94,7 +94,9 @@ function speak(text){ speakDone(text); }
 function speakDone(text){
   if(!audioOn || !text) return Promise.resolve();
   const key = text.trim();
-  const url = MANIFEST && MANIFEST[key];
+  // Генератор озвучки выкидывает кавычки из ключа, а строки сказок их содержат:
+  // каждая реплика в диалоге не находилась и читалась синтезатором вместо Alice.
+  const url = MANIFEST && (MANIFEST[key] || MANIFEST[key.replace(/["«»""]/g, '').trim()]);
   if(!url){ browserSay(key); return new Promise(r=>setTimeout(r, 380 + key.length*55)); }
   return new Promise(res=>{
     stopAudio();
