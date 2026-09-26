@@ -153,7 +153,25 @@ function stopWalk(){
   if(walkStop){ walkStop(); walkStop=null; }
   clearInterval(timer);
   document.querySelectorAll('.lit').forEach(e=>e.classList.remove('lit'));
+  // Кнопки прохода возвращаются к «слушать», если проход оборвали извне —
+  // сменой вкладки или другим проходом. Иначе на них оставалось «Стоп».
+  document.querySelectorAll('[data-walk][data-on="1"]').forEach(b=>{ b.dataset.on=''; b.innerHTML=ic('play')+'Пройти'; });
+  document.querySelectorAll('[data-read][data-on="1"]').forEach(b=>{ b.dataset.on=''; b.innerHTML=ic('play')+'Прочитать вслух'; });
 }
+
+/* Короткое сообщение внизу экрана: подтверждение или подсказка, почему
+   ничего не произошло. Одно на экране, само исчезает. */
+let toastTimer = null;
+function toast(msg){
+  let t = document.querySelector('.toast');
+  if(!t){ t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
+  t.textContent = msg;
+  requestAnimationFrame(()=>t.classList.add('on'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 2600);
+}
+/* Заново проигрывает короткую анимацию появления — для слова, сменившего слово. */
+function bump(el){ if(!el || REDUCE) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 function walkThrough(items, textOf, gap, onEnd){
   let i=0, cancelled=false;
   walkStop = () => { cancelled=true; };
@@ -640,24 +658,35 @@ document.addEventListener('click', ev=>{
     }
   }
   const fin = ev.target.closest('[data-finish]');
-  if(fin) show('today');
+  if(fin){ show('today'); toast('Занятие закончено. Завтра «Сегодня» подскажет, с чего начать.'); }
 
   const s = ev.target.closest('[data-say]');
-  if(s){ speak(s.dataset.say);
+  if(s){
+    // Слово светится, пока звучит его запись: видно, что нажатие услышано,
+    // даже если запись ещё грузится.
+    document.querySelectorAll('.saying').forEach(e=>e.classList.remove('saying'));
+    if(audioOn && !s.classList.contains('ln')){ s.classList.add('saying'); speakDone(s.dataset.say).then(()=>s.classList.remove('saying')); }
+    else speak(s.dataset.say);
     if(s.classList.contains('word')) s.classList.add('done');
     if(s.classList.contains('ln')){ document.querySelectorAll('.ln.lit').forEach(l=>l.classList.remove('lit')); s.classList.add('lit'); } }
 
   const wb = ev.target.closest('[data-walk]');
   if(wb){ const col=wb.closest('.col'), ws=[...col.querySelectorAll('.word')];
+    const wasOn = wb.dataset.on;
     stopWalk();
+    if(wasOn) return;
     if(wb.dataset.on){ wb.dataset.on=''; wb.innerHTML=ic('play')+'Пройти'; return; }
-    document.querySelectorAll('[data-walk]').forEach(b=>{b.dataset.on='';b.innerHTML=ic('play')+'Пройти';});
     wb.dataset.on='1'; wb.innerHTML=ic('pause')+'Стоп';
     walkThrough(ws, w=>w.textContent, 900, ()=>{ wb.dataset.on=''; wb.innerHTML=ic('play')+'Пройти'; }); }
 
   const rd = ev.target.closest('[data-read]');
   if(rd){ const ls=[...rd.closest('.story').querySelectorAll('.ln')];
-    stopWalk(); walkThrough(ls, l=>l.dataset.say, 1100); }
+    const was = rd.dataset.on;
+    stopWalk();
+    if(!was){
+      rd.dataset.on='1'; rd.innerHTML=ic('pause')+'Стоп';
+      walkThrough(ls, l=>l.dataset.say, 1100, ()=>{ rd.dataset.on=''; rd.innerHTML=ic('play')+'Прочитать вслух'; });
+    } }
 
   const pk = ev.target.closest('[data-set]');
   if(pk){ pk.classList.toggle('on'); renderCards(); }
@@ -781,7 +810,7 @@ function initDrill(root){
     const next = () => {
       const pool = coveredWords();
       if(pool_) pool_.textContent = coveredLabel();
-      let w; do { w = rnd(pool); } while(w===cur && pool.length>1); cur=w; el.textContent=w;
+      let w; do { w = rnd(pool); } while(w===cur && pool.length>1); cur=w; el.textContent=w; bump(el);
     };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
@@ -811,7 +840,7 @@ function initDrill(root){
       const s = got('tricky');
       const fresh = words.filter(w=>!s.has(w) && w!==cur);
       cur = fresh.length ? rnd(fresh) : rnd(words.filter(w=>w!==cur).concat(words));
-      el.textContent = cur; paint(); if(!quiet) speak(cur);
+      el.textContent = cur; bump(el); paint(); if(!quiet) speak(cur);
     };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
@@ -827,7 +856,7 @@ function initDrill(root){
   (box => {
     const el = box.querySelector('[data-word]');
     let cur = null;
-    const next = (quiet) => { cur = rnd(coveredWords()); el.textContent=cur; el.classList.add('hide'); if(!quiet) speak(cur); };
+    const next = (quiet) => { cur = rnd(coveredWords()); el.textContent=cur; el.classList.add('hide'); bump(el); if(!quiet) speak(cur); };
     box.addEventListener('click', ev => {
       const a = ev.target.closest('[data-d]')?.dataset.d;
       if(a==='play' && cur) speak(cur);
@@ -848,6 +877,7 @@ function initDrill(root){
       pair = rnd(g.p); target = rnd(pair);
       tip.textContent = g.hint;
       row.innerHTML = pair.map(w=>`<button class="pwbtn en" data-w="${esc(w)}">${esc(w)}</button>`).join('');
+      bump(row);
       if(!quiet) setTimeout(()=>speak(target), 260);
     };
     const mark = () => { score.textContent = total ? `Угадано ${right} из ${total}` : ''; };
@@ -876,6 +906,16 @@ function initDrill(root){
     next(true);
   })(root.querySelector('[data-drill="pairs"]'));
 }
+
+/* При выключенном звуке нажатие на «послушать» раньше просто ничего не
+   делало — выглядело как поломка. Теперь объясняем и подсвечиваем кнопку. */
+let muteHinted = 0;
+document.addEventListener('click', ev => {
+  if(audioOn) return;
+  if(!ev.target.closest('[data-say],[data-a="say"],[data-a="blend"],[data-p="say"],[data-d="say"],[data-d="blend"],[data-d="play"],[data-read],[data-walk]')) return;
+  const m = $('mute'); m.classList.remove('nudge'); void m.offsetWidth; m.classList.add('nudge');
+  if(Date.now() - muteHinted > 5000){ muteHinted = Date.now(); toast('Звук выключен — включите его кнопкой вверху'); }
+});
 
 /* ==================== НАСТРОЙКИ ==================== */
 const $ = id => document.getElementById(id);

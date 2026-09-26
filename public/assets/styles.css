@@ -364,3 +364,23 @@ select.fld{appearance:none;cursor:pointer}
   .chips{display:grid;gap:7px;grid-template-columns:repeat(auto-fill,minmax(max(44px,calc((100% - 35px)/6)),1fr))}
   .chip{min-width:0;padding:8px 4px}
 }
+
+/* ---------- отклик на нажатия ---------- */
+.word.saying,.pill.saying{background:var(--sun)}
+.qs .qq.saying{color:var(--c,var(--blue));border-bottom-color:currentColor}
+.dbig.bump,.dpair.bump{animation:bump .34s cubic-bezier(.34,1.56,.64,1)}
+.dbig{transition:color .25s ease,text-shadow .25s ease}
+@media (hover:hover){
+  .word:hover,.pill:hover{background:#fff}
+  .story .ln:hover:not(.lit){background:rgba(255,212,59,.28)}
+  .walk:hover{box-shadow:inset 0 0 0 1.5px var(--c,var(--blue))}
+  .seg:not(.on):hover{color:var(--ink)}
+  .icn:hover{filter:brightness(1.06)}
+}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));z-index:95;
+  transform:translate(-50%,14px);opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;
+  max-width:calc(100% - 32px);background:var(--ink);color:#fff;font-family:var(--font);font-size:14.5px;font-weight:700;
+  padding:12px 18px;border-radius:16px;box-shadow:0 10px 30px rgba(34,36,58,.28);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.icn.nudge{animation:nudge .55s ease}
+@keyframes nudge{25%{transform:scale(1.18)}55%{transform:scale(.94)}80%{transform:scale(1.06)}}
