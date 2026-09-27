@@ -7,7 +7,7 @@ export const GROUPS = [
 { id:'today', nav:'Сегодня', icon:'calendar-check', c:'#3D7BFF', kind:'today', art:'sun' },
 
 { id:'set1', nav:'Неделя 1', sub:'s a t p i n', c:'#3D7BFF', soft:'#E7F0FF', kind:'g', art:'cat',
-  num:'Набор 1', title:'s · a · t · p · i · n',
+  num:'Первые звуки', title:'s · a · t · p · i · n',
   lead:'Шесть звуков — и уже читаются настоящие слова. Названия букв не трогаем.',
   sounds:[['s','/s/','змея: ssss'],['a','/æ/','рот широко'],['t','/t/','язык на бугорке за зубами'],
     ['p','/p/','с придыханием'],['i','/ɪ/','короткий, расслабленный'],['n','/n/','на бугорке']],
@@ -19,7 +19,7 @@ export const GROUPS = [
     qRu:['По чему стучит Нэн?','Почему Пип поднимается?','Кто засыпает в конце?'] } },
 
 { id:'set2', nav:'Неделя 2', sub:'m d g o c k', c:'#22C55E', soft:'#E6F9ED', kind:'g', art:'dog',
-  num:'Набор 2', title:'m · d · g · o · c · k',
+  num:'Новые звуки', title:'m · d · g · o · c · k',
   lead:'Появляется третья гласная. В таблице теперь три столбика.',
   sounds:[['m','/m/','губы вместе: mmm'],['d','/d/','язык на бугорке'],['g','/g/','коротко, из горла'],
     ['o','/ɒ/','губы кружком'],['c','/k/','коротко'],['k','/k/','тот же звук, что c']],
@@ -32,7 +32,7 @@ export const GROUPS = [
     k:W('is a the'), q:['Who is Tom?','What did Nan get?','Where does Tom nap?','Is Tom glad or mad?'], qRu:['Кто такой Том?','Что взяла Нэн?','Где Том засыпает?','Том рад или сердит?'] } },
 
 { id:'set3', nav:'Неделя 3–4', sub:'ck e u r h b f l', c:'#FF9F1C', soft:'#FFF3E0', kind:'g', art:'bug',
-  num:'Набор 3', title:'ck · e · u · r · h · b · f · l',
+  num:'Новые звуки', title:'ck · e · u · r · h · b · f · l',
   lead:'Столбики e и u — самые трудные для русскоязычных детей. Им нужно больше проходов.',
   sounds:[['ck','/k/','две буквы — один звук'],['e','/e/','короткий «э»'],['u','/ʌ/','похож на «а», не «у»'],
     ['r','/r/','язык назад, не дрожит'],['h','/h/','лёгкий выдох'],['b','/b/','коротко'],
@@ -48,7 +48,7 @@ export const GROUPS = [
     k:W('a the is has and'), q:['What is in the mug?','What does Pip get?','Who is glad at the end?'], qRu:['Кто сидит в кружке?','Что берёт Пип?','Кто радуется в конце?'] } },
 
 { id:'set4', nav:'Неделя 5', sub:'j v w x y z qu', c:'#A855F7', soft:'#F4EAFE', kind:'g', art:'duck',
-  num:'Набор 4', title:'j · v · w · x · y · z · qu  +  ff · ll · ss · zz',
+  num:'Новые звуки', title:'j · v · w · x · y · z · qu  +  ff · ll · ss · zz',
   lead:'Главная развилка — v и w. Палец перед губами: /v/ чувствует зубы, /w/ получает поцелуй.',
   sounds:[['j','/dʒ/','«дж» одним движением'],['v','/v/','зубы на губу + голос'],['w','/w/','губы трубочкой'],
     ['x','/ks/','два звука сразу'],['y','/j/','как «й»'],['z','/z/','zzzz'],['qu','/kw/','всегда вдвоём']],
@@ -57,7 +57,7 @@ export const GROUPS = [
     ['i','/ɪ/',W('zip zig wig win wit fix six mix jig fill')],
     ['o','/ɒ/',W('job jog jot box fox doll')],
     ['u','/ʌ/',W('jug jut yum buzz fuzz')]],
-  extra:{ t:'Двойные ff · ll · ss · zz — в конце слова после короткой гласной',
+  extra:{ t:'Двойные буквы в конце слова', sub:'ff · ll · ss · zz — удваиваются в конце слова после короткой гласной.', icon:'type',
     cols:[['-ff','',W('off puff cuff')],['-ll','',W('bell fill hill well tell doll')],
       ['-ss','',W('miss kiss less mess boss fuss')],['-zz','',W('buzz fizz jazz fuzz')]] },
   spin:W('jam jab jag wag yam yak zap zag van wax jet vet web wed yes yet vex zip zig wig win wit fix six mix jig job jog jot box fox jug jut yum quiz quit quack buzz fizz jazz bell well tell fill hill doll miss kiss less mess off puff cuff'),
@@ -73,7 +73,7 @@ export const GROUPS = [
   sounds:[['th','/θ/','язык между зубами, горло молчит'],['th','/ð/','язык между зубами, горло дрожит']],
   cols:[['i','/ɪ/',W('thin thick think thrill')],['a','/æ/',W('thank bath math path')],
     ['o','/ɒ/',W('moth cloth broth froth')],['e','/e/',W('tenth them then')]],
-  extra:{ t:'th звонкий /ð/ · слова-помощники, учим узнаванием',
+  extra:{ t:'th звонкий /ð/', sub:'Слова-помощники — их учат узнаванием.', icon:'type',
     cols:[['/ð/','',W('this that then them they the than')]] },
   spin:W('thin thick think thank thud thug this that them then than bath math path moth with cloth froth'),
   story:{ t:'Text 5 · Beth and Seth', art:'moth',
@@ -106,7 +106,7 @@ export const GROUPS = [
 
 { id:'ph', nav:'Неделя 11', sub:'ph', c:'#84CC16', soft:'#F0FADF', kind:'ph', art:'ship',
   num:'Две буквы — один звук', title:'ph  =  /f/',
-  lead:'p и h поссорились, и теперь за них говорит /f/. Слова здесь длиннее — читаем их целиком.',
+  lead:'p и h поссорились, и теперь за них говорит /f/.',
   sounds:[['ph','/f/','фотоаппарат: щёлк']],
   wall:W('Phil phone photo graph phonics dolphin elephant alphabet phrase'),
   story:{ t:'Text 8 · Phil and the Photo', art:'ship',
@@ -129,7 +129,7 @@ export const GROUPS = [
     ['o_e','/əʊ/',W('hope note code robe rode cone nose home bone stone')],
     ['u_e','/juː/',W('cube cute huge tube use June rule flute mute')],
     ['e_e','/iː/',W('Pete these Steve eve theme')]],
-  extra:{ t:'Слова-обманщики · e есть, а правило не работает. Учим наизусть.',
+  extra:{ t:'Слова-обманщики', sub:'Буква e на конце есть, а правило не работает. Эти слова учат наизусть.', icon:'layers',
     cols:[['✗','',W('have give live come some love done gone none one')]] },
   story:{ t:'Text 10 · Mike and the Kite', art:'kite',
     l:['Mike has a red bike.','Kate has a big kite.','','"Ride with me!" said Mike.','The kite is up. Up, up, up!','','Then the kite tugs.','Mike rides fast!','','Kate can not stop him.','','The kite dips.','Mike is in the lake!','','Mike is wet.','"What a fine ride!" said Mike.'],
@@ -153,19 +153,19 @@ export const GROUPS = [
    Раньше здесь стояли эмодзи: на каждом телефоне свои, а на бумаге — самое
    дешёвое, что было в курсе. У торта — кусок без свечи, как и в иллюстрации. */
 export const CARDS = [
- ['Набор 1','s','sun','sun'],['Набор 1','a','apple','apple',1],['Набор 1','t','tap','tap'],
- ['Набор 1','p','pig','pig'],['Набор 1','i','ink','ink',1],['Набор 1','n','net','net'],
- ['Набор 2','m','man','man'],['Набор 2','d','dog','dog'],['Набор 2','g','gas','gas'],
- ['Набор 2','o','octopus','octopus',1],['Набор 2','c','cat','cat'],['Набор 2','k','kid','kid'],
- ['Набор 3','ck','duck','duck'],['Набор 3','e','egg','egg',1],['Набор 3','u','umbrella','umbrella',1],
- ['Набор 3','r','run','run'],['Набор 3','h','hat','hat'],['Набор 3','b','bed','bed'],
- ['Набор 3','f','fan','fan'],['Набор 3','l','leg','leg'],
- ['Набор 4','j','jam','jam'],['Набор 4','v','van','van'],['Набор 4','w','web','web'],
- ['Набор 4','x','box','box'],['Набор 4','y','yes','yes'],['Набор 4','z','zip','zip'],['Набор 4','qu','queen','queen'],
- ['Диграфы','th','thin','thin'],['Диграфы','th','this','this'],['Диграфы','ch','chip','chip'],
- ['Диграфы','sh','ship','ship'],['Диграфы','ph','photo','photo'],
- ['Немая e','a_e','cake','cake',1],['Немая e','i_e','kite','kite',1],['Немая e','o_e','bone','bone',1],
- ['Немая e','u_e','cube','cube',1],['Немая e','e_e','Pete','Pete',1]
+ ['Неделя 1','s','sun','sun'],['Неделя 1','a','apple','apple',1],['Неделя 1','t','tap','tap'],
+ ['Неделя 1','p','pig','pig'],['Неделя 1','i','ink','ink',1],['Неделя 1','n','net','net'],
+ ['Неделя 2','m','man','man'],['Неделя 2','d','dog','dog'],['Неделя 2','g','gas','gas'],
+ ['Неделя 2','o','octopus','octopus',1],['Неделя 2','c','cat','cat'],['Неделя 2','k','kid','kid'],
+ ['Недели 3–4','ck','duck','duck'],['Недели 3–4','e','egg','egg',1],['Недели 3–4','u','umbrella','umbrella',1],
+ ['Недели 3–4','r','run','run'],['Недели 3–4','h','hat','hat'],['Недели 3–4','b','bed','bed'],
+ ['Недели 3–4','f','fan','fan'],['Недели 3–4','l','leg','leg'],
+ ['Неделя 5','j','jam','jam'],['Неделя 5','v','van','van'],['Неделя 5','w','web','web'],
+ ['Неделя 5','x','box','box'],['Неделя 5','y','yes','yes'],['Неделя 5','z','zip','zip'],['Неделя 5','qu','queen','queen'],
+ ['Недели 7–11','th','thin','thin'],['Недели 7–11','th','this','this'],['Недели 7–11','ch','chip','chip'],
+ ['Недели 7–11','sh','ship','ship'],['Недели 7–11','ph','photo','photo'],
+ ['Неделя 12','a_e','cake','cake',1],['Неделя 12','i_e','kite','kite',1],['Неделя 12','o_e','bone','bone',1],
+ ['Неделя 12','u_e','cube','cube',1],['Неделя 12','e_e','Pete','Pete',1]
 ];
 
 /* ==================== ПОЧЕМУ ЗВУКИ НЕ ОЗВУЧЕНЫ ====================

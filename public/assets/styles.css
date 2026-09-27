@@ -404,3 +404,27 @@ select.fld{appearance:none;cursor:pointer}
    прибитый к окну, телефон перерисовывает целиком на каждом кадре — нажатия
    начинали ждать отрисовки. Здесь то же самое, только без размытия. */
 .icn,.btn,.seg,.word,.walk,.fluent,.re,.pk{touch-action:manipulation}
+
+/* ---------- по итогам попиксельного прохода ---------- */
+.wk .t{font-family:'Andika',var(--font)}
+/* вопросы к рассказу — по ним нажимают пальцем: 24px было мало */
+.qs .qq{display:inline-block;padding:5px 0;line-height:1.45}
+/* длинные пояснения под кнопками читаются слева, а не столбиком по центру */
+.spin > .hint{text-align:left}
+@media (max-width:520px){
+  /* три кнопки в ряд помещаются, а не роняют третью на отдельную строку */
+  .btn{padding:12px 20px;font-size:16.5px}
+  .btn.sm{padding:10px 14px;font-size:15px}
+  .bar{gap:8px}
+}
+/* Самые узкие телефоны (320–360px): у ученика в шапке три кнопки — звук,
+   настройки, выход — и на 320px выход уезжал за край экрана на 24px. */
+@media (max-width:360px){
+  .hdr-in{padding-left:12px;padding-right:12px}
+  .hdr-row{gap:6px}
+  .logo{font-size:21px;gap:7px}
+  .logo .mark{width:28px;height:28px;flex-basis:28px}
+  .icn{width:34px;height:34px}
+  .icn .ic{width:17px;height:17px}
+  .segs{margin:0 -12px;padding-left:12px;padding-right:12px}
+}

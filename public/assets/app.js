@@ -369,14 +369,14 @@ function startHTML(){ return `
 <div class="card">
   <h2 class="sec"><span class="emo">${ic('calendar-days')}</span> Маршрут на 12 недель</h2>
   <div class="weeks">
-    ${[['1','Набор 1','Text 1','set1'],['2','Набор 2','Text 2','set2'],['3–4','Набор 3','Text 3','set3'],
-       ['5','Набор 4','Text 4','set4'],['6','Повтор 1–4','проверка','drill'],['7–8','th','Text 5','th'],
+    ${[['1','s a t p i n','Text 1','set1'],['2','m d g o c k','Text 2','set2'],['3–4','ck e u r h b f l','Text 3','set3'],
+       ['5','j v w x y z qu','Text 4','set4'],['6','Повтор','проверка','drill'],['7–8','th','Text 5','th'],
        ['9','ch','Text 6','ch'],['10','sh','Text 7','sh'],['11','ph','Text 8–9','ph'],
        ['12','Немая e','Text 10–12','me']]
       .map(([n,t,x,gid])=>`<div class="wk" data-week="${gid}"><div class="n">${n} нед.</div><div class="t">${t}</div>`+
         `<div class="x">${x}</div><div class="wbar"><i></i></div><div class="wnum"></div></div>`).join('')}
   </div>
-  <p class="hint" style="margin-bottom:10px">Клетка закрашивается, когда все столбики набора отмечены «бегло» — отметку ставите вы, кнопкой под столбиком. Клики ребёнка сюда не считаются: их слишком легко набрать, не читая.</p>
+  <p class="hint" style="margin-bottom:10px">Клетка закрашивается, когда все столбики недели отмечены «бегло» — отметку ставите вы, кнопкой под столбиком. Клики ребёнка сюда не считаются: их слишком легко набрать, не читая.</p>
   <p class="hint"><b>th идёт первым среди сочетаний намеренно</b> — этого звука нет в русском, ему нужно больше всего времени. Если через две недели он не звучит, идите дальше к <span class="en">ch</span>, а <span class="en">th</span> держите разминкой по 30 секунд перед занятием. На <span class="en">th</span> многие застревают — это нормально.</p>
 </div>`; }
 
@@ -385,7 +385,7 @@ function groupHTML(g){
     ${art(g.art)}
     <div class="inner">
       <div class="kick">${esc(g.num)}</div>
-      <h1 class="big en">${esc(g.title)}</h1>
+      <h1 class="big en">${esc(g.title).replace(/ · /g,'\u00a0· ').replace(/  \+  /g,'\u00a0+ ')}</h1>
       <p class="sub">${esc(g.lead)}</p>
     </div>
     <div class="chips">${g.sounds.map(([l,i])=>`<div class="chip" style="--c:${g.c}"><b class="en">${esc(l)}</b><i>${esc(i)}</i></div>`).join('')}</div>
@@ -393,7 +393,8 @@ function groupHTML(g){
   </div>`;
   if(g.cols) h += `<div class="card"><h2 class="sec"><span class="emo">${ic('columns-3')}</span> Слова · читаем столбиками</h2>
     <p class="sub" style="margin-bottom:11px">Три прохода по каждому столбику, и только потом — строками.</p>${colsHTML(g.cols, g.id)}</div>`;
-  if(g.extra) h += `<div class="card"><h2 class="sec">${esc(g.extra.t)}</h2>${colsHTML(g.extra.cols, g.id+'+')}</div>`;
+  if(g.extra) h += `<div class="card"><h2 class="sec">${g.extra.icon?`<span class="emo">${ic(g.extra.icon)}</span>`:''}${esc(g.extra.t)}</h2>
+    ${g.extra.sub?`<p class="sub" style="margin-bottom:11px">${esc(g.extra.sub)}</p>`:''}${colsHTML(g.extra.cols, g.id+'+')}</div>`;
   if(g.wall) h += `<div class="card"><h2 class="sec"><span class="emo">${ic('type')}</span> Стена слов</h2>
     <p class="sub" style="margin-bottom:13px">Тренажёра здесь нет: слова с <span class="en">ph</span> длиннее, их читают целиком. Нажмите на слово — оно прозвучит.</p>
     <div class="wall">${g.wall.map(w=>`<button class="pill" data-say="${esc(w)}">${w.replace(/([Pp])h/,'<u>$1h</u>')}</button>`).join('')}</div></div>`;
@@ -437,7 +438,7 @@ function spinHTML(g){ return `<div class="spin" data-spin="${g.id}">
     <button class="btn soft sm" data-a="say" aria-label="Послушать">${ic('volume-2')}</button>
   </div>
   <p class="hint" style="margin:9px 0 0">«Слить» тянет слово целиком — <span class="en">сссаааат</span> — и сразу повторяет в обычном темпе. Звуки не разрываются намеренно: если произнести <span class="en">/t/</span> отдельно, получится «тэ», и ребёнок начнёт слышать лишний гласный там, где его нет.</p>
-  <div class="bank"><div class="bhead"><span class="t">Слова набора</span><span class="cnt" data-cnt></span>
+  <div class="bank"><div class="bhead"><span class="t">Слова недели</span><span class="cnt" data-cnt></span>
     <button class="re" data-a="reset">Сбросить</button></div>
   <div class="bws" data-bank></div></div></div>`; }
 
@@ -445,11 +446,11 @@ function pairHTML(g){ return `<div class="spin" data-pair="${g.id}">
   <div class="kick" style="--c:${g.c}">Тренажёр пар</div>
   <div class="pair"><div class="pw en" data-s>—</div><div class="arw">+e</div><div class="pw en off" data-l>—</div></div>
   <div class="bar">
-    <button class="btn pur" data-p="add">${ic('plus')}Добавить e</button>
-    <button class="btn soft" data-p="spin">Новая пара</button>
+    <button class="btn" data-p="add">${ic('plus')}Добавить e</button>
+    <button class="btn soft sm" data-p="spin">Новая пара</button>
     <button class="btn soft sm" data-p="say" aria-label="Послушать">${ic('volume-2')}</button>
   </div>
-  <div class="bank"><div class="bhead"><span class="t">Пары набора</span><span class="cnt" data-pcnt></span>
+  <div class="bank"><div class="bhead"><span class="t">Пары недели</span><span class="cnt" data-pcnt></span>
     <button class="re" data-p="reset">Сбросить</button></div>
   <div class="bws" data-pbank></div></div>
   <p class="hint" style="text-align:left">Ребёнок читает короткое слово → нажимает «Добавить e» → читает длинное. Вслух оба. Гласная должна назвать своё имя.</p></div>`; }
@@ -458,7 +459,7 @@ function storyHTML(s){ return `<div class="card story">
   <h2 class="sec">${art(s.art,'sm')}${esc(s.t)}</h2>
   <div style="margin:13px 0 0">${s.l.map(l=>l===''?'<div class="gap"></div>':
     `<button class="ln en" data-say="${esc(l.replace(/"/g,''))}">${esc(l)}</button>`).join('')}</div>
-  <div class="trk"><span class="l">Хитрецы</span>${s.k.map(t=>`<span class="tw2 en">${esc(t)}</span>`).join('')}</div>
+  <div class="trk"><span class="l">Слова-обманщики</span>${s.k.map(t=>`<span class="tw2 en">${esc(t)}</span>`).join('')}</div>
   <ol class="qs">${s.q.map((q,i)=>`<li><button class="qq en" data-say="${esc(q)}">${esc(q)}</button>`+
     `${s.qRu&&s.qRu[i]?`<span class="qru">${esc(s.qRu[i])}</span>`:''}</li>`).join('')}</ol>
   <div class="bar" style="justify-content:flex-start"><button class="btn soft sm" data-read>${ic('play')}Прочитать вслух</button></div></div>`; }
@@ -736,14 +737,14 @@ function drillHTML(){
   ${art('bug')}
   <div class="inner">
     <div class="kick">Тренировка</div>
-    <h1 class="big">Четыре упражнения между наборами</h1>
+    <h1 class="big">Четыре упражнения для повторения</h1>
     <p class="sub">Берите по одному в конце занятия, две-три минуты. Шестая неделя маршрута — это целиком повтор вперемешку.</p>
   </div>
 </div>
 
 <div class="card" data-drill="review">
   <h2 class="sec"><span class="emo">${ic('shuffle')}</span> Повтор вперемешку</h2>
-  <p class="sub">Слова вперемешку, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему. Берутся только пройденные наборы.</p>
+  <p class="sub">Слова вперемешку, без подсказки гласной в шапке. Если читается здесь — читается по-настоящему. Берутся только пройденные недели.</p>
   <div class="dbig en" data-word>—</div>
   <p class="hint" data-pool style="margin:0 0 10px"></p>
   <div class="bar" style="justify-content:flex-start">
