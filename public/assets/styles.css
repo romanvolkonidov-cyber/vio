@@ -384,3 +384,17 @@ select.fld{appearance:none;cursor:pointer}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .icn.nudge{animation:nudge .55s ease}
 @keyframes nudge{25%{transform:scale(1.18)}55%{transform:scale(.94)}80%{transform:scale(1.06)}}
+
+/* ---------- настройки: на компьютере — окно по центру ----------
+   Снизу выезжающая панель удобна на телефоне (до неё дотягивается большой
+   палец), а на широком экране она прилипала к низу и выглядела обрезанной. */
+@media (min-width:640px){
+  .sheet{top:50%;bottom:auto;left:50%;right:auto;width:min(460px,calc(100% - 48px));
+    border-radius:26px;padding:22px 26px 26px;max-height:85vh;
+    transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;
+    transition:transform .22s cubic-bezier(.32,.72,0,1),opacity .18s ease;
+    box-shadow:0 30px 80px rgba(34,36,58,.25)}
+  .sheet.on{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+  .sheet .grab{display:none}
+}
+.stat[hidden]{display:none}

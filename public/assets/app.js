@@ -278,7 +278,7 @@ function renderToday(){
   else    steps.push(['shuffle','Повтор вперемешку','столбики закончились — проверьте их вразнобой']);
   if(g.spin)  steps.push(['refresh-cw','Тренажёр слов','8–10 слов, ребёнок читает вслух']);
   if(g.pairs) steps.push(['sparkles','Пары с немой e','короткое слово → добавили e → длинное']);
-  if(story)   steps.push(['book-open',esc(story),'сначала читает ребёнок, потом слушаем Alice']);
+  if(story)   steps.push(['book-open',esc(story),'сначала читает ребёнок, потом слушаем запись']);
 
   pane.innerHTML = `
 <div class="card hero" style="--t:#E7F0FF;--c:#3D7BFF">
@@ -310,7 +310,7 @@ function renderToday(){
       <li><b>Без призвука «э».</b> Не «бэ», «дэ», «кэ» — резко и почти шёпотом.</li>
       <li><b>Столбиками, а не строками.</b> В столбике одна гласная, меняются только согласные.</li>
     </ul>
-    <p style="margin:8px 0 0">Не уверены в произношении — нажмите на слово, его прочитает Alice. Подробнее: вкладка «Как это работает».</p></div></details>
+    <p style="margin:8px 0 0">Не уверены в произношении — нажмите на слово, оно прозвучит. Подробнее — во вкладке «Как это работает».</p></div></details>
 </div>`;
   markEnglish(pane);
 }
@@ -321,7 +321,7 @@ function startHTML(){ return `
   <div class="inner">
     <div class="kick">Фоникс · 5–9 лет</div>
     <h1 class="big">Ребёнок читает не слова, а звуки — и складывает их сам</h1>
-    <p class="sub">Через 12 недель он прочитает английское слово, которое видит впервые. Мама ведёт занятие: 15 минут в день, по одной вкладке сверху.</p>
+    <p class="sub">Через 12 недель ребёнок прочитает английское слово, которое видит впервые. Занятие ведёт взрослый: 15 минут в день, по одной вкладке сверху.</p>
   </div>
   <div class="rules">
     <div class="rl"><b>${ic('type')}Звук, а не буква</b><span>Не «эм», а /m/. Названия букв — потом, иначе <span class="en">cat</span> станет «си-эй-ти».</span></div>
@@ -336,7 +336,7 @@ function startHTML(){ return `
   <p class="sub"><b>Столбиками, сверху вниз. Не строками.</b> В каждом столбике одна и та же гласная — ребёнок перестаёт перебирать гласные и меняет только согласные.</p>
   <ol class="steps">
     <li>Покажите на шапку столбика: «Здесь везде /a/». Ребёнок повторяет звук три раза.</li>
-    <li>Читаем столбик сверху вниз, медленно. Кнопка <b>${ic('play')}</b> подсвечивает слова по очереди и держит темп.</li>
+    <li>Читаем столбик сверху вниз, медленно. Кнопка <b>«Пройти»</b> подсвечивает слова по очереди и держит темп.</li>
     <li>Тот же столбик ещё раз, быстрее. И третий раз — бегло.</li>
     <li>Следующий столбик. Так же, три прохода.</li>
     <li>Когда все столбики бегло — читаем <b>строками</b>, слева направо. Это проверка.</li>
@@ -352,19 +352,24 @@ function startHTML(){ return `
       <li>Один столбик за раз. Не проходите всю таблицу в первый день.</li>
       <li>Столбик освоен, если читается сверху вниз <b>и</b> снизу вверх без пауз.</li>
     </ul></div></details>
-  <details class="row"><summary><span class="emo">${ic('refresh-cw')}</span> Что делать со спиннером</summary>
+  <details class="row"><summary><span class="emo">${ic('refresh-cw')}</span> Что делать с тренажёром слов</summary>
     <div class="body"><ol>
-      <li><b>Просто крути.</b> Барабаны останавливаются по очереди слева направо — слово собирается в том же порядке, в каком ребёнок его читает.</li>
+      <li><b>Просто крутите.</b> Барабаны останавливаются по очереди слева направо — слово собирается в том же порядке, в каком ребёнок его читает.</li>
       <li><b>Меняем одну деталь.</b> Кнопки ${ic('rotate-ccw')} под «Начало» и «Конец» крутят только один барабан, гласная стоит на месте.</li>
       <li><b>Слить по звукам.</b> Части подсвечиваются по очереди: сначала ребёнок называет части, потом слово целиком.</li>
     </ol>
-    <p style="margin:8px 0 0">Спиннер собирает слова только из пройденных звуков — незнакомого не выпадет.</p></div></details>
-  <details class="row"><summary><span class="emo">${ic('volume-2')}</span> Как работает озвучка</summary>
+    <p style="margin:8px 0 0">Тренажёр собирает слова только из пройденных звуков — незнакомого не выпадет.</p></div></details>
+  <details class="row"><summary><span class="emo">${ic('volume-2')}</span> Озвучка и если нет звука</summary>
     <div class="body">
-      <p style="margin:0 0 8px">Слова читает <b>Alice</b> — живой британский голос ElevenLabs. Все записи сделаны заранее: при открытии набора они уезжают в память браузера, и дальше занятие идёт мгновенно и без интернета. Скорость чтения — кнопка ${ic('sliders-horizontal')} вверху справа.</p>
-      <p style="margin:0"><b>Отдельные звуки не озвучиваются намеренно.</b> Синтез читает их как названия букв — «си» вместо /k/ — и это сломало бы метод. Звуки произносит взрослый по подсказкам в карточке набора.</p></div></details>
+      <p style="margin:0 0 8px">Нажмите на любое слово, строку рассказа или вопрос — прозвучит британское произношение. Скорость меняется кнопкой ${ic('sliders-horizontal')} вверху справа.</p>
+      <p style="margin:0 0 8px">Отдельные звуки не озвучены: в записи /k/ или /t/ звучат как «кэй» и «ти», и ребёнок начал бы путать звук с названием буквы. Звуки показываете вы — подсказки в начале каждой недели.</p>
+      <p style="margin:0"><b>Нет звука?</b> Проверьте кнопку звука вверху, громкость телефона, а на iPhone — переключатель «Без звука» сбоку. Из России записи иногда не загружаются без VPN.</p></div></details>
+  <details class="row"><summary><span class="emo">${ic('clipboard-list')}</span> Где хранятся отметки и куда писать</summary>
+    <div class="body">
+      <p style="margin:0 0 8px">Отметки «Бегло» и пройденные слова хранятся на этом устройстве. Занимайтесь с одного телефона или компьютера — на другом прогресс начнётся заново.</p>
+      <p style="margin:0">Вопросы по курсу — пишите в Telegram: <a href="https://t.me/teacheroman" target="_blank" rel="noopener" style="color:var(--c,var(--blue));font-weight:800">@teacheroman</a>.</p></div></details>
   <details class="row"><summary><span class="emo">${ic('puzzle')}</span> Проверка: бессмысленные слова</summary>
-    <div class="body"><p style="margin:0 0 8px">Если ребёнок читает выдуманные слова — он декодирует, а не угадывает. Скажите: «Это слова из языка роботов».</p>
+    <div class="body"><p style="margin:0 0 8px">Если ребёнок читает выдуманные слова — он действительно читает по звукам, а не угадывает по памяти. Скажите: «Это слова из языка роботов».</p>
     <p class="en" style="font-size:20px;font-weight:700;color:var(--ink);margin:0">vap · zib · fom · dut · nes · quz · lig · mub · tesh · chid</p></div></details>
 </div>
 
@@ -379,7 +384,7 @@ function startHTML(){ return `
         `<div class="x">${x}</div><div class="wbar"><i></i></div><div class="wnum"></div></div>`).join('')}
   </div>
   <p class="hint" style="margin-bottom:10px">Клетка закрашивается, когда все столбики набора отмечены «бегло» — отметку ставите вы, кнопкой под столбиком. Клики ребёнка сюда не считаются: их слишком легко набрать, не читая.</p>
-  <p class="hint"><b>th стоит первым среди диграфов намеренно</b> — этого звука нет в русском, ему нужно больше всего времени. Если через две недели он не звучит, идите дальше к <span class="en">ch</span>, а <span class="en">th</span> держите разминкой по 30 секунд перед занятием. Застревание на <span class="en">th</span> — главная причина, по которой семьи бросают фоникс.</p>
+  <p class="hint"><b>th идёт первым среди сочетаний намеренно</b> — этого звука нет в русском, ему нужно больше всего времени. Если через две недели он не звучит, идите дальше к <span class="en">ch</span>, а <span class="en">th</span> держите разминкой по 30 секунд перед занятием. На <span class="en">th</span> многие застревают — это нормально.</p>
 </div>`; }
 
 function groupHTML(g){
@@ -397,7 +402,7 @@ function groupHTML(g){
     <p class="sub" style="margin-bottom:11px">Три прохода по каждому столбику, и только потом — строками.</p>${colsHTML(g.cols, g.id)}</div>`;
   if(g.extra) h += `<div class="card"><h2 class="sec">${esc(g.extra.t)}</h2>${colsHTML(g.extra.cols, g.id+'+')}</div>`;
   if(g.wall) h += `<div class="card"><h2 class="sec"><span class="emo">${ic('type')}</span> Стена слов</h2>
-    <p class="sub" style="margin-bottom:13px">Спиннера здесь нет: слова с <span class="en">ph</span> длиннее CVC, их берут целиком. Нажмите — прозвучит.</p>
+    <p class="sub" style="margin-bottom:13px">Тренажёра здесь нет: слова с <span class="en">ph</span> длиннее, их читают целиком. Нажмите на слово — оно прозвучит.</p>
     <div class="wall">${g.wall.map(w=>`<button class="pill" data-say="${esc(w)}">${w.replace(/([Pp])h/,'<u>$1h</u>')}</button>`).join('')}</div></div>`;
   if(g.spin) h += spinHTML(g);
   if(g.pairs) h += pairHTML(g);
@@ -776,7 +781,7 @@ function drillHTML(){
 
 <div class="card" data-drill="dictation">
   <h2 class="sec"><span class="emo">${ic('pencil-line')}</span> Диктант</h2>
-  <p class="sub">Слово звучит, ребёнок пишет на бумаге, потом сверяем. Обратная операция закрепляет чтение быстрее повторного чтения и сразу показывает, какой звук на самом деле не различается.</p>
+  <p class="sub">Слово звучит, ребёнок пишет его на бумаге, потом сверяем. Письмо на слух закрепляет чтение и сразу показывает, какие звуки ребёнок путает.</p>
   <div class="dbig en hide" data-word>—</div>
   <div class="bar" style="justify-content:flex-start">
     <button class="btn" data-d="play">${ic('volume-2')}Сказать слово</button>
@@ -923,7 +928,8 @@ const sheet = $('sheet'), scrim = $('scrim');
 $('gear').onclick = () => { sheet.classList.add('on'); scrim.classList.add('on'); };
 $('close').onclick = closeSheet; scrim.onclick = closeSheet;
 function closeSheet(){ sheet.classList.remove('on'); scrim.classList.remove('on'); }
-function setStat(t,k){ const s=$('stat'); if(!s) return; s.textContent=t; s.className='stat'+(k?' '+k:''); }
+document.addEventListener('keydown', e => { if(e.key==='Escape' && sheet.classList.contains('on')) closeSheet(); });
+function setStat(t,k){ const s=$('stat'); if(!s) return; s.textContent=t; s.className='stat'+(k?' '+k:''); s.hidden=!t; }
 
 $('mute').onclick = function(){ audioOn=!audioOn; this.classList.toggle('on',audioOn);
   this.innerHTML = ic(audioOn?'volume-2':'volume-x'); if(!audioOn) stopAudio(); LS.set('audio',audioOn); };
@@ -932,12 +938,13 @@ $('rate').oninput = function(){ rate=this.value/100; LS.set('rate',rate); labelR
    ползунка, а то, что получится на выходе — иначе «1,00×» читалось бы как
    «обычный темп», хотя это совсем не он. */
 function labelRate(){
+  // Родителю нужен смысл скорости, а не множитель вроде «0,70×»
   const eff = BAKED * rate;
-  $('ratelbl').textContent = eff.toFixed(2) + '× от обычной речи — ' +
-    (eff < .6 ? 'очень медленно, буква за буквой'
-     : eff < .78 ? 'темп занятия, как записано'
-     : eff < .95 ? 'бодрее, для беглого чтения'
-     : 'обычная речь');
+  $('ratelbl').textContent =
+    eff < .6 ? 'Очень медленно — слово по звукам'
+    : eff < .78 ? 'Как на занятии — так и записано'
+    : eff < .95 ? 'Бодрее — для беглого чтения'
+    : 'Как в обычной речи';
 }
 $('test').onclick = () => speak(EXTRA_SAY[0]);
 
@@ -983,8 +990,8 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   renderToday();
   show(GROUPS.some(g=>g.id===LS.get('tab')) ? LS.get('tab') : 'today');
 
-  if(MANIFEST) setStat('Слова читает '+VOICE_NAME+'. Записей: '+Object.keys(MANIFEST).length+'. После первого прохода набор работает офлайн.','ok');
-  else setStat('Файлы озвучки не найдены — работает голос браузера. Соберите её: npm run audio.','err');
+  // Родителю не нужны число записей и имя диктора — только «работает» или «что делать»
+  if(!MANIFEST) setStat('Записи не загрузились. Проверьте интернет и обновите страницу — пока слова читает голос устройства.','err');
 
   try{ speechSynthesis.getVoices(); }catch(e){}
   if('serviceWorker' in navigator && location.protocol.startsWith('http'))

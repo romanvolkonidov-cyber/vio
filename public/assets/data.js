@@ -48,7 +48,7 @@ export const GROUPS = [
     k:W('a the is has and'), q:['What is in the mug?','What does Pip get?','Who is glad at the end?'], qRu:['Кто сидит в кружке?','Что берёт Пип?','Кто радуется в конце?'] } },
 
 { id:'set4', nav:'Неделя 5', sub:'j v w x y z qu', c:'#A855F7', soft:'#F4EAFE', kind:'g', art:'duck',
-  num:'Набор 4', title:'j · v · w · x · y · z · qu  +  FLOSS',
+  num:'Набор 4', title:'j · v · w · x · y · z · qu  +  ff · ll · ss · zz',
   lead:'Главная развилка — v и w. Палец перед губами: /v/ чувствует зубы, /w/ получает поцелуй.',
   sounds:[['j','/dʒ/','«дж» одним движением'],['v','/v/','зубы на губу + голос'],['w','/w/','губы трубочкой'],
     ['x','/ks/','два звука сразу'],['y','/j/','как «й»'],['z','/z/','zzzz'],['qu','/kw/','всегда вдвоём']],
@@ -57,7 +57,7 @@ export const GROUPS = [
     ['i','/ɪ/',W('zip zig wig win wit fix six mix jig fill')],
     ['o','/ɒ/',W('job jog jot box fox doll')],
     ['u','/ʌ/',W('jug jut yum buzz fuzz')]],
-  extra:{ t:'FLOSS · в конце слова после краткой гласной удваиваются ff · ll · ss · zz',
+  extra:{ t:'Двойные ff · ll · ss · zz — в конце слова после короткой гласной',
     cols:[['-ff','',W('off puff cuff')],['-ll','',W('bell fill hill well tell doll')],
       ['-ss','',W('miss kiss less mess boss fuss')],['-zz','',W('buzz fizz jazz fuzz')]] },
   spin:W('jam jab jag wag yam yak zap zag van wax jet vet web wed yes yet vex zip zig wig win wit fix six mix jig job jog jot box fox jug jut yum quiz quit quack buzz fizz jazz bell well tell fill hill doll miss kiss less mess off puff cuff'),
@@ -68,7 +68,7 @@ export const GROUPS = [
 { id:'drill', nav:'Неделя 6', sub:'повтор', c:'#0EA5E9', soft:'#E0F4FE', kind:'drill', art:'bug' },
 
 { id:'th', nav:'Неделя 7–8', sub:'th', c:'#FF4D6D', soft:'#FFEBEF', kind:'g', art:'moth',
-  num:'Диграф 1', title:'th  =  /θ/ и /ð/',
+  num:'Две буквы — один звук', title:'th  =  /θ/ и /ð/',
   lead:'Этих звуков нет в русском. Ставим первым — ему нужно больше всего времени. Закладывайте две недели.',
   sounds:[['th','/θ/','язык между зубами, горло молчит'],['th','/ð/','язык между зубами, горло дрожит']],
   cols:[['i','/ɪ/',W('thin thick think thrill')],['a','/æ/',W('thank bath math path')],
@@ -81,7 +81,7 @@ export const GROUPS = [
     k:W('the a said then'), q:['Where do Beth and Seth run?','What is on the cloth?','Is the moth still there?'], qRu:['Где бегут Бет и Сет?','Кто сидит на тряпке?','Мотылёк всё ещё там?'] } },
 
 { id:'ch', nav:'Неделя 9', sub:'ch', c:'#06B6D4', soft:'#E4F8FC', kind:'g', art:'chick',
-  num:'Диграф 2', title:'ch  =  /tʃ/',
+  num:'Две буквы — один звук', title:'ch  =  /tʃ/',
   lead:'После th это отдых: звук в русском есть. Только твёрже — губы вперёд, как у поезда.',
   sounds:[['ch','/tʃ/','поезд: ch-ch-choo'],['tch','/tʃ/','после краткой гласной в конце']],
   cols:[['a','/æ/',W('chat chap catch match')],['e','/e/',W('check chess chest fetch bench')],
@@ -93,7 +93,7 @@ export const GROUPS = [
     k:W('it a the said'), q:['Where does Chad sit?','What has Chad got?','Who runs up?'], qRu:['Где сидит Чад?','Что у Чада с собой?','Кто прибегает?'] } },
 
 { id:'sh', nav:'Неделя 10', sub:'sh', c:'#FF6FB5', soft:'#FFEBF5', kind:'g', art:'fish',
-  num:'Диграф 3', title:'sh  =  /ʃ/',
+  num:'Две буквы — один звук', title:'sh  =  /ʃ/',
   lead:'Самый лёгкий диграф. Губы вытянуты трубочкой — между русским «ш» и «щ».',
   sounds:[['sh','/ʃ/','тише: shhhh']],
   cols:[['a','/æ/',W('shall cash dash rash mash')],['e','/e/',W('shed shell mesh')],
@@ -105,14 +105,14 @@ export const GROUPS = [
     k:W('the a I for said'), q:['What has the shop got?','What does Nan wish for?','Why will the fish not fit?'], qRu:['Что продаётся в лавке?','Чего хочет Нэн?','Почему рыба не влезает?'] } },
 
 { id:'ph', nav:'Неделя 11', sub:'ph', c:'#84CC16', soft:'#F0FADF', kind:'ph', art:'ship',
-  num:'Диграф 4', title:'ph  =  /f/',
-  lead:'p и h поссорились, и теперь за них говорит /f/. Слова длиннее CVC, поэтому берём их целиком.',
+  num:'Две буквы — один звук', title:'ph  =  /f/',
+  lead:'p и h поссорились, и теперь за них говорит /f/. Слова здесь длиннее — читаем их целиком.',
   sounds:[['ph','/f/','фотоаппарат: щёлк']],
   wall:W('Phil phone photo graph phonics dolphin elephant alphabet phrase'),
   story:{ t:'Text 8 · Phil and the Photo', art:'ship',
     l:['Phil has a photo.','The photo is of a big ship.','','"Is this Dad?" said Phil.','"Yes! That is Dad on the ship," said Mum.','','Phil is glad.','Phil puts the photo on his desk.'],
     k:W('a the of is this said his puts'), q:['What is on the photo?','Who is on the ship?','Where does Phil put it?'], qRu:['Что на фотографии?','Кто на корабле?','Куда Фил ставит фото?'] },
-  story2:{ t:'Text 9 · Fish and Chips — все диграфы вместе', art:'fish',
+  story2:{ t:'Text 9 · Fish and Chips — все сочетания вместе', art:'fish',
     l:['Josh has a big fish.','The fish is on a dish.','Chad has hot chips.','Munch, munch, munch!','','"This fish is thick," said Josh.','"That chip is hot!" said Chad.','','Then a cat ran in.','The cat got the fish!','Dash! The cat is off.','','Josh and Chad had chips for lunch.'],
     k:W('the a said then for had'), q:['What has Josh got?','Who got the fish?','What did they have for lunch?'], qRu:['Что поймал Джош?','Кто утащил рыбу?','Что они ели на обед?'] } },
 
