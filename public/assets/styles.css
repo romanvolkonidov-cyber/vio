@@ -427,4 +427,55 @@ select.fld{appearance:none;cursor:pointer}
   .icn{width:34px;height:34px}
   .icn .ic{width:17px;height:17px}
   .segs{margin:0 -12px;padding-left:12px;padding-right:12px}
+  /* проверка недели и «Какой звук?»: три кнопки в одну строку и на 320px */
+  .check .bar .btn,[data-drill="sound"] .bar .btn{padding:11px 14px;font-size:15.5px}
+  .check .bar .btn.sm,[data-drill="sound"] .bar .btn.sm{padding:10px 12px}
 }
+
+/* ---------- проверка недели ---------- */
+.check .cprog{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-family:var(--disp);font-size:13px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.check .tag{background:#F6EDFE;color:var(--grape);border-radius:999px;padding:2px 10px;letter-spacing:.02em;text-transform:none;font-size:12.5px}
+.check .dbig{margin:14px 0 6px}
+.cscore{font-family:var(--disp);font-size:44px;font-weight:800;line-height:1.1;margin:10px 0 0;color:var(--ink2)}
+.cscore.pass{color:#12A150}
+.check .trk button.tw2{border:none;cursor:pointer;font:inherit;font-family:'Andika',var(--font);font-size:14.5px;font-weight:700}
+
+/* ---------- звёзды и наклейки ---------- */
+.kid .stars{display:flex;align-items:center;gap:8px;margin:12px 0 4px;font-family:var(--disp);font-size:18px;font-weight:800;color:var(--ink)}
+.kid .stars .ic{width:22px;height:22px;color:#F5B400;fill:#FFD43B}
+.kid .stars b{font-size:24px}
+.stickers{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px;margin-top:12px}
+.stk{background:var(--bg);border-radius:18px;padding:10px 6px 8px;text-align:center}
+.stk .art{width:52px;margin:0 auto;filter:grayscale(1);opacity:.28;transition:filter .3s,opacity .3s}
+.stk span{display:block;margin-top:4px;font-family:var(--disp);font-size:12px;font-weight:800;color:var(--ink3)}
+.stk.got{background:#FFF6D6;box-shadow:inset 0 0 0 2px #FFD43B}
+.stk.got .art{filter:none;opacity:1}
+.stk.got span{color:var(--ink)}
+
+.starpop{position:fixed;z-index:96;width:28px;height:28px;color:#F5B400;pointer-events:none;animation:starpop .85s ease-out forwards}
+.starpop .ic{width:28px;height:28px;fill:#FFD43B}
+@keyframes starpop{0%{transform:scale(.4);opacity:0}25%{transform:translateY(-10px) scale(1.25);opacity:1}100%{transform:translateY(-46px) scale(.9);opacity:0}}
+
+.celebrate{position:fixed;inset:0;z-index:97;background:rgba(34,36,58,.42);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .22s}
+.celebrate.on{opacity:1}
+.cel-card{background:var(--bg);border-radius:28px;padding:26px 30px 24px;text-align:center;max-width:320px;width:100%;box-shadow:0 30px 80px rgba(34,36,58,.3);transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.celebrate.on .cel-card{transform:none}
+.cel-card .art{width:132px;margin:0 auto}
+.cel-k{font-family:var(--disp);font-size:26px;font-weight:800;margin:8px 0 0}
+.cel-t{color:var(--ink2);margin:2px 0 16px}
+
+/* ---------- какой звук? ---------- */
+.qpos{font-family:var(--disp);font-size:18px;font-weight:800;margin:14px 0 0}
+.sopts{display:flex;gap:10px;margin:12px 0 4px}
+.sopt{flex:1 1 0;max-width:120px;border:2px solid var(--hair);background:var(--card);border-radius:18px;padding:12px 0;cursor:pointer;
+  font-family:'Andika',var(--font);font-size:34px;font-weight:700;color:var(--ink);touch-action:manipulation}
+.sopt:hover{border-color:var(--c,var(--blue))}
+.sopt.ok{border-color:#22C55E;background:#E6F9ED;color:#12A150}
+.sopt.no{border-color:#FF4D6D;background:#FFE8ED;color:#E0245E}
+.sword{margin:10px 0 0;min-height:1.2em}
+.sword .hl{color:var(--c,var(--blue));text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+
+/* кнопка звука рядом со словом, а не третьей в ряду — иначе на 320px она падала на новую строку */
+.check .cword{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px}
+.check .cword .dbig{margin:0}
+.check .cword .icn{flex:0 0 auto}

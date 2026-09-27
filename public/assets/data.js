@@ -149,6 +149,23 @@ export const GROUPS = [
 { id:'start', nav:'Как это работает', icon:'book-open', c:'#F59E0B', kind:'start', art:'sun' }
 ];
 
+/* Выдуманные слова для проверки недели. Собраны только из звуков, пройденных
+   к этой неделе, и в каждом есть звук самой недели. Отсеяны настоящие слова
+   (по словарю macOS и словам курса), грубые и двусмысленные: mom, veg, fick,
+   kum, lez, bish, g перед e/i. Записей у них нет намеренно: такое слово нельзя
+   узнать по памяти или на слух — только прочитать по звукам. */
+export const MADE_UP = {
+  set1:['nin','tas','nas'],
+  set2:['gop','pid','kot','mip','kad','pog'],
+  set3:['hab','ruf','dul','lem','hed','ren'],
+  set4:['jep','zal','zog','quom','kiz','fiz'],
+  th:  ['thap','thop','jeth','suth','tham','puth'],
+  ch:  ['chep','chog','fech','vuch','tich','rech'],
+  sh:  ['shom','shol','shep','zesh','jish','shem'],
+  ph:  ['phap','phob','phad','phun','phen','phal'],
+  me:  ['fule','nove','voke','saze','thabe','muve'],
+};
+
 /* Четвёртое поле — картинка: assets/cards/<имя>.svg (Fluent Emoji Flat, MIT).
    Раньше здесь стояли эмодзи: на каждом телефоне свои, а на бумаге — самое
    дешёвое, что было в курсе. У торта — кусок без свечи, как и в иллюстрации. */

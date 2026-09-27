@@ -1,4 +1,4 @@
-import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords } from './data.js';
+import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords, MADE_UP } from './data.js';
 import { art } from './art.js';
 import { ic } from './icons.js';
 
@@ -35,10 +35,22 @@ const colsOf = g => [
   ...(g.cols||[]).map(c => g.id+'/'+c[0]),
   ...(g.extra?.cols||[]).map(c => g.id+'+/'+c[0]),
 ];
-function toggleFluent(id){
-  fluent.has(id) ? fluent.delete(id) : fluent.add(id);
+function toggleFluent(id, btn){
+  const on = !fluent.has(id);
+  on ? fluent.add(id) : fluent.delete(id);
   LS.set('fluent', [...fluent]);
   paintFluent();
+  if(on && btn) starPop(btn);
+}
+/* Звезда за столбик — для ребёнка: отметку ставит взрослый, а радуется ребёнок. */
+function starPop(btn){
+  if(REDUCE) return;
+  const r = btn.getBoundingClientRect();
+  const s = document.createElement('span');
+  s.className = 'starpop'; s.innerHTML = ic('star');
+  s.style.left = (r.left + r.width/2 - 14) + 'px'; s.style.top = (r.top - 6) + 'px';
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(), 900);
 }
 function paintFluent(){
   document.querySelectorAll('[data-fluent]').forEach(b=>{
@@ -296,6 +308,8 @@ function renderToday(){
   ${doneAll ? '<p class="hint">Все столбики этой недели отмечены. Пройдите тренировку вперемешку — и переходите дальше.</p>' : ''}
 </div>
 
+${kidHTML()}
+
 <div class="list">
   <details class="row"><summary><span class="emo">${ic('type')}</span> Три правила, без которых не работает</summary>
     <div class="body"><ul>
@@ -403,6 +417,7 @@ function groupHTML(g){
   if(g.story) h += storyHTML(g.story);
   if(g.story3) h += storyHTML(g.story3);   // порядок по номеру текста, а не по имени поля
   if(g.story2) h += storyHTML(g.story2);
+  h += checkHTML(g);
   h += `<div class="card" style="text-align:center">
     <h2 class="sec" style="justify-content:center"><span class="emo">${ic('circle-check')}</span> На сегодня всё</h2>
     <p class="sub">Пятнадцати минут достаточно. Отметьте пройденный столбик кнопкой «Бегло» — и приложение само скажет, с чего начать завтра.</p>
@@ -640,7 +655,7 @@ function initPair(box){
 /* ==================== ГЛОБАЛЬНЫЕ КЛИКИ ==================== */
 document.addEventListener('click', ev=>{
   const fl = ev.target.closest('[data-fluent]');
-  if(fl) toggleFluent(fl.dataset.fluent);
+  if(fl) toggleFluent(fl.dataset.fluent, fl);
 
   const td = ev.target.closest('[data-today]');
   if(td){
@@ -695,6 +710,117 @@ document.addEventListener('click', ev=>{
     Promise.all(imgs.map(i=>i.complete ? 1 : new Promise(r=>{ i.onload=i.onerror=r; })))
       .then(()=>setTimeout(()=>window.print(),80)); }
 });
+
+/* ==================== ПРОВЕРКА НЕДЕЛИ И НАКЛЕЙКИ ====================
+   Минута в конце недели: 5 слов недели и 3 выдуманных. Выдуманные нельзя
+   узнать по памяти — только прочитать по звукам, поэтому они и есть главная
+   часть проверки. Порог — 7 из 8. За пройденную проверку ребёнок получает
+   наклейку — зверя этой недели; наклейки собираются на «Сегодня». */
+const CHECK_REAL = 5, CHECK_MADE = 3, CHECK_PASS = 7;
+let checks = {}, stickers = new Set();
+const checkState = new Map();
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+const weekWordsOf = g => [...new Set([...(g.cols || []).flatMap(c => c[2]), ...(g.spin || []), ...(g.wall || [])])];
+const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c; };
+function saveChecks(){ LS.set('checks', checks); LS.set('stickers', [...stickers]); }
+
+function checkHTML(g){
+  if(!MADE_UP[g.id]) return '';
+  return `<div class="card check" data-check="${g.id}">
+  <h2 class="sec"><span class="emo">${ic('target')}</span> Проверка недели</h2>
+  <div data-cbody></div></div>`;
+}
+function renderCheck(gid){
+  const box = document.querySelector(`[data-check="${gid}"] [data-cbody]`); if(!box) return;
+  const g = GROUPS.find(x => x.id === gid);
+  const st = checkState.get(gid) || { phase: 'intro' };
+  if(st.phase === 'intro'){
+    const last = checks[gid];
+    box.innerHTML = `<p class="sub">Минута в конце недели. Ребёнок читает 8 слов без подсказки, вы отмечаете, верно ли. Три слова выдуманные — их нельзя узнать по памяти, только прочитать по звукам. Пройдено от ${CHECK_PASS} из 8 — ребёнок получает наклейку.</p>
+    ${last ? `<p class="hint">Последний раз: ${last.score} из ${last.total}${stickers.has(gid) ? ' · наклейка получена' : ''}</p>` : ''}
+    <div class="bar" style="justify-content:flex-start"><button class="btn" data-c="start">${ic('play')}Начать проверку</button></div>`;
+  } else if(st.phase === 'run'){
+    const it = st.items[st.i];
+    box.innerHTML = `<p class="cprog"><span>Слово ${st.i + 1} из ${st.items.length}</span>${it.made ? '<span class="tag">выдуманное</span>' : ''}</p>
+    <div class="cword"><div class="dbig en" data-cword>${esc(it.w)}</div>${it.made ? '' : `<button class="icn" data-c="say" aria-label="Послушать слово" title="Послушать">${ic('volume-2')}</button>`}</div>
+    <div class="bar">
+      <button class="btn" data-c="ok">${ic('check')}Верно</button>
+      <button class="btn soft" data-c="no">${ic('x')}Ошибся</button>
+    </div>
+    <p class="hint">${it.made ? 'У выдуманного слова нет записи: читайте его по звукам, как написано.' : 'Сомневаетесь, как звучит слово, — нажмите на значок звука.'}</p>`;
+    bump(box.querySelector('[data-cword]'));
+  } else {
+    const n = st.right.length, total = st.items.length;
+    const pass = n >= CHECK_PASS;
+    const msg = pass ? 'Неделя усвоена — можно идти дальше.'
+      : n >= 5 ? 'Почти. Повторите слова с ошибками и столбики этой недели, а проверку пройдите через день-два.'
+      : 'Пока рано идти дальше: ещё пару дней на столбиках и тренажёре этой недели.';
+    box.innerHTML = `<p class="cscore ${pass ? 'pass' : ''}">${n} из ${total}</p>
+    <p class="sub" style="margin-top:4px">${msg}</p>
+    ${st.wrong.length ? `<div class="trk" style="margin-top:12px"><span class="l">Ошибки</span>${st.wrong.map(it => it.made
+      ? `<span class="tw2 en">${esc(it.w)}</span>` : `<button class="tw2 en" data-say="${esc(it.w)}">${esc(it.w)}</button>`).join('')}</div>` : ''}
+    <div class="bar" style="justify-content:flex-start"><button class="btn soft" data-c="start">${ic('rotate-ccw')}Пройти ещё раз</button></div>`;
+  }
+}
+function startCheck(gid){
+  const g = GROUPS.find(x => x.id === gid);
+  // Слова недели, где есть её новые звуки: иначе проверка второй недели
+  // спрашивала sit и nip — слова первой, которые просто повторены в столбиках.
+  const fresh = (g.sounds || []).map(([l]) => l.toLowerCase());
+  const all = weekWordsOf(g), withNew = all.filter(w => fresh.some(x => w.toLowerCase().includes(x)));
+  const src = withNew.length >= CHECK_REAL ? withNew : all;
+  const real = shuffle(src).slice(0, CHECK_REAL).map(w => ({ w, made: false }));
+  const made = shuffle(MADE_UP[gid]).slice(0, CHECK_MADE).map(w => ({ w, made: true }));
+  checkState.set(gid, { phase: 'run', items: shuffle([...real, ...made]), i: 0, right: [], wrong: [] });
+  renderCheck(gid);
+}
+function answerCheck(gid, ok){
+  const st = checkState.get(gid); if(!st || st.phase !== 'run') return;
+  const it = st.items[st.i];
+  (ok ? st.right : st.wrong).push(it);
+  st.i++;
+  if(st.i >= st.items.length){
+    st.phase = 'done';
+    checks[gid] = { score: st.right.length, total: st.items.length, at: Date.now() };
+    const pass = st.right.length >= CHECK_PASS, fresh = pass && !stickers.has(gid);
+    if(pass) stickers.add(gid);
+    saveChecks();
+    renderCheck(gid);
+    if(fresh) celebrate(GROUPS.find(x => x.id === gid));
+  } else renderCheck(gid);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-c]'); if(!b) return;
+  const gid = b.closest('[data-check]')?.dataset.check; if(!gid) return;
+  const a = b.dataset.c;
+  if(a === 'start') startCheck(gid);
+  if(a === 'ok') answerCheck(gid, true);
+  if(a === 'no') answerCheck(gid, false);
+  if(a === 'say'){ const st = checkState.get(gid); if(st) speak(st.items[st.i].w); }
+});
+
+/* Наклейка — праздник на весь экран, но короткий и без звука: занятие идёт дальше. */
+function celebrate(g){
+  const o = document.createElement('div');
+  o.className = 'celebrate'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Новая наклейка');
+  o.innerHTML = `<div class="cel-card">${art(g.art)}<p class="cel-k">Новая наклейка!</p><p class="cel-t">${esc(g.nav)} пройдена</p>
+    <button class="btn" data-cel>Ура!</button></div>`;
+  document.body.appendChild(o);
+  requestAnimationFrame(() => o.classList.add('on'));
+  const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 250); };
+  o.addEventListener('click', e => { if(e.target === o || e.target.closest('[data-cel]')) close(); });
+}
+
+function kidHTML(){
+  const weeks = GROUPS.filter(g => MADE_UP[g.id]);
+  const n = fluent.size;
+  return `<div class="card kid">
+  <h2 class="sec"><span class="emo">${ic('star')}</span> Звёзды и наклейки</h2>
+  <p class="sub">Звезда — за каждый столбик с отметкой «Бегло». Наклейка — за пройденную проверку недели.</p>
+  <p class="stars">${ic('star')}<b>${n}</b> ${plural(n, 'звезда', 'звезды', 'звёзд')}</p>
+  <div class="stickers">${weeks.map(g => `<div class="stk${stickers.has(g.id) ? ' got' : ''}" title="${esc(g.nav)}">${art(g.art)}<span>${esc(g.nav.replace('Неделя ', ''))}</span></div>`).join('')}</div>
+</div>`;
+}
 
 /* ==================== КАРТОЧКИ ==================== */
 function renderCards(){
@@ -779,6 +905,19 @@ function drillHTML(){
     <button class="btn soft sm" data-d="next">Дальше</button>
   </div>
   <p class="hint">Кнопку «Показать» нажимает ребёнок сам — после того как написал.</p>
+</div>
+
+<div class="card" data-drill="sound">
+  <h2 class="sec"><span class="emo">${ic('ear')}</span> Какой звук?</h2>
+  <p class="sub">Звучит слово. Ребёнок выбирает букву, которой записан звук в начале, в середине или в конце. Слова — только из пройденных недель.</p>
+  <p class="qpos" data-qpos></p>
+  <div class="sopts" data-opts></div>
+  <div class="dbig en sword" data-sword></div>
+  <div class="bar" style="justify-content:flex-start">
+    <button class="btn" data-d="play">${ic('volume-2')}Ещё раз</button>
+    <button class="btn soft sm" data-d="next">Другое слово</button>
+  </div>
+  <p class="hint" data-sscore></p>
 </div>
 
 <div class="card" data-drill="pairs">
@@ -900,6 +1039,66 @@ function initDrill(root){
     });
     next(true);
   })(root.querySelector('[data-drill="pairs"]'));
+
+  /* — какой звук? — различение звука в слове (обратное слиянию).
+     Звук ребёнок слышит в целом слове из готовой записи; отдельные звуки не
+     озвучены, поэтому варианты — буквы. Одинаково звучащие написания (c/k/ck,
+     f/ff/ph, s/ss…) вместе в варианты не попадают, иначе верных было бы два. */
+  (box => {
+    const DIG = ['ck','ll','ss','ff','zz','sh','ch','th','ph','qu'];
+    const same = x => ({c:'k',k:'k',ck:'k',f:'f',ff:'f',ph:'f',s:'s',ss:'s',l:'l',ll:'l',z:'z',zz:'z'}[x] || x);
+    const oneSound = x => x.length === 1 || DIG.includes(x);
+    const VOW = ['a','e','i','o','u'];
+    const POS = ['Какой звук в начале слова?', 'Какой звук в середине слова?', 'Какой звук в конце слова?'];
+    const qpos = box.querySelector('[data-qpos]'), opts = box.querySelector('[data-opts]');
+    const wordEl = box.querySelector('[data-sword]'), score = box.querySelector('[data-sscore]');
+    let cur = null, parts = null, pos = 0, ans = null, right = 0, total = 0, locked = false;
+
+    const taught = () => {
+      const order = GROUPS.filter(g => g.kind === 'g' || g.kind === 'ph' || g.kind === 'me');
+      const upto = order.indexOf(reachedGroup());
+      const set = new Set();
+      order.slice(0, upto + 1).forEach(g => (g.sounds || []).forEach(([l]) => { if (oneSound(l.toLowerCase())) set.add(l.toLowerCase()); }));
+      return [...set];
+    };
+    const pool = () => coveredWords().filter(w => /^[a-z]+$/.test(w) && !/e$/.test(w)).filter(w => {
+      const p = split(w);
+      return p[0] && p[1] && p[2] && oneSound(p[0]) && oneSound(p[2]) && (!MANIFEST || MANIFEST[w]);
+    });
+    const next = (quiet) => {
+      const ws = pool(); if (!ws.length) return;
+      let w; do { w = rnd(ws); } while (w === cur && ws.length > 1);
+      cur = w; parts = split(w); pos = Math.floor(Math.random() * 3); ans = parts[pos]; locked = false;
+      const t = taught();
+      const kind = pos === 1 ? t.filter(x => VOW.includes(x)) : t.filter(x => !VOW.includes(x));
+      const picks = [ans]; const used = new Set([same(ans)]);
+      for (const d of kind.sort(() => Math.random() - .5)) { if (picks.length === 3) break; if (!used.has(same(d))) { picks.push(d); used.add(same(d)); } }
+      picks.sort(() => Math.random() - .5);
+      qpos.textContent = POS[pos];
+      opts.innerHTML = picks.map(x => `<button class="sopt en" data-o="${esc(x)}">${esc(x)}</button>`).join('');
+      wordEl.innerHTML = '&nbsp;';
+      if (!quiet) speak(w);
+    };
+    const mark = () => { score.textContent = total ? `Угадано ${right} из ${total}` : ''; };
+    box.addEventListener('click', ev => {
+      const o = ev.target.closest('[data-o]');
+      if (o && cur && !locked) {
+        locked = true; total++;
+        const ok = same(o.dataset.o) === same(ans);
+        if (ok) right++;
+        o.classList.add(ok ? 'ok' : 'no');
+        if (!ok) opts.querySelector(`[data-o="${CSS.escape(ans)}"]`)?.classList.add('ok');
+        wordEl.innerHTML = parts.map((x, i) => i === pos ? `<span class="hl">${esc(x)}</span>` : esc(x)).join('');
+        bump(wordEl); mark();
+        setTimeout(() => speak(cur), 250);
+        return;
+      }
+      const a = ev.target.closest('[data-d]')?.dataset.d;
+      if (a === 'play' && cur) speak(cur);
+      if (a === 'next') next();
+    });
+    next(true);
+  })(root.querySelector('[data-drill="sound"]'));
 }
 
 /* При выключенном звуке нажатие на «послушать» раньше просто ничего не
@@ -942,6 +1141,8 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
 (async () => {
   const s = LS.get('seen',{}); for(const k in s) seen[k]=new Set(s[k]);
   fluent = new Set(LS.get('fluent',[]));
+  checks = LS.get('checks', {}); stickers = new Set(LS.get('stickers', []));
+  Object.keys(MADE_UP).forEach(renderCheck);
   audioOn = LS.get('audio',true);
   rate    = LS.get('rate',1);
   $('rate').value = Math.round(rate*100);
