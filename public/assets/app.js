@@ -252,15 +252,7 @@ function show(id){
    Ничего не хранит: план целиком выводится из того, какие столбики уже
    отмечены беглыми. Мама не выбирает, с чего начать, — ей это сказано. */
 function planNow(){
-  const order = GROUPS.filter(x => ['g','ph','me'].includes(x.kind));
-  let g = reachedGroup();
-  // набор закрыт целиком — ведём на следующий, иначе мама застрянет на месте
-  const closed = x => { const c = colsOf(x); return c.length && c.every(k => fluent.has(k)); };
-  while (closed(g)) {
-    const nxt = order[order.indexOf(g) + 1];
-    if (!nxt) break;
-    g = nxt;
-  }
+  const g = reachedGroup();   // первая неделя, где не всё отмечено «бегло»
   const cols = colsOf(g);                        // ключи вида "set3/e"
   const left = cols.filter(c => !fluent.has(c));
   const col  = left[0] ? left[0].split('/').slice(1).join('/') : null;
@@ -300,7 +292,8 @@ function renderToday(){
     <button class="btn" data-today="go">${ic('play')}Начать занятие</button>
     ${first ? '' : '<button class="btn soft sm" data-today="drill">'+ic('target')+'Тренировка</button>'}
   </div>
-  ${doneAll ? '<p class="hint">Все столбики этого набора отмечены беглыми. Пройдите тренировку вперемешку — и переходите к следующей неделе.</p>' : ''}
+  <p class="hint">«Сегодня» само выбирает шаг по вашим отметкам «Бегло» под столбиками: отметили все столбики недели — план переходит к следующей. Заглядывать вперёд можно, план от этого не сдвинется.</p>
+  ${doneAll ? '<p class="hint">Все столбики этой недели отмечены. Пройдите тренировку вперемешку — и переходите дальше.</p>' : ''}
 </div>
 
 <div class="list">
@@ -721,19 +714,15 @@ function renderCards(){
    (самые частые слова английского, правило на них не работает), диктант
    (обратная операция закрепляет чтение быстрее, чем повторное чтение) и
    пары гласных (у русскоязычных /æ/, /e/ и /ʌ/ схлопываются в один звук). */
-/* Насколько далеко ребёнок продвинулся. Раньше повтор и диктант брали все 303
-   слова курса, включая flute, Steve и theme из последнего набора, — ребёнку
-   первой недели, знающему s a t p i n, показывали слова, которые он не может
-   прочитать в принципе. Считаем по отметкам «бегло», а если их ещё нет — по
-   тому, где он вообще что-то нажимал. */
+/* Неделя, на которой ребёнок сейчас: первая, где не все столбики отмечены
+   «бегло». Раньше считалась самая дальняя неделя, где хоть что-то нажимали:
+   одно нажатие «Новое слово» на пятой неделе — и «Сегодня» уводило туда,
+   пропуская недели 2–4, а повтор и диктант подмешивали слова пятой недели.
+   Заглянуть вперёд теперь можно без последствий — движут только отметки. */
 function reachedGroup(){
   const order = GROUPS.filter(g => g.kind === 'g' || g.kind === 'ph' || g.kind === 'me');
-  let last = order[0];
-  for (const g of order){
-    const touched = colsOf(g).some(c => fluent.has(c)) || (seen[g.id] && seen[g.id].size);
-    if (touched) last = g;
-  }
-  return last;
+  const closed = g => { const c = colsOf(g); return c.length && c.every(k => fluent.has(k)); };
+  return order.find(g => !closed(g)) || order[order.length - 1];
 }
 function coveredWords(){ return drillWords(reachedGroup().id); }
 function coveredLabel(){
