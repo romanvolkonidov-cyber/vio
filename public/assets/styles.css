@@ -434,7 +434,6 @@ select.fld{appearance:none;cursor:pointer}
 
 /* ---------- проверка недели ---------- */
 .check .cprog{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-family:var(--disp);font-size:13px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
-.check .tag{background:#F6EDFE;color:var(--grape);border-radius:999px;padding:2px 10px;letter-spacing:.02em;text-transform:none;font-size:12.5px}
 .check .dbig{margin:14px 0 6px}
 .cscore{font-family:var(--disp);font-size:44px;font-weight:800;line-height:1.1;margin:10px 0 0;color:var(--ink2)}
 .cscore.pass{color:#12A150}
@@ -479,3 +478,4 @@ select.fld{appearance:none;cursor:pointer}
 .check .cword{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px}
 .check .cword .dbig{margin:0}
 .check .cword .icn{flex:0 0 auto}
+.cel-card .bar{margin-top:0}

@@ -1,4 +1,4 @@
-import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords, MADE_UP } from './data.js';
+import { GROUPS, CARDS, phrasesOf, EXTRA_SAY, MIN_PAIRS, trickyWords, drillWords } from './data.js';
 import { art } from './art.js';
 import { ic } from './icons.js';
 
@@ -712,11 +712,16 @@ document.addEventListener('click', ev=>{
 });
 
 /* ==================== ПРОВЕРКА НЕДЕЛИ И НАКЛЕЙКИ ====================
-   Минута в конце недели: 5 слов недели и 3 выдуманных. Выдуманные нельзя
-   узнать по памяти — только прочитать по звукам, поэтому они и есть главная
-   часть проверки. Порог — 7 из 8. За пройденную проверку ребёнок получает
-   наклейку — зверя этой недели; наклейки собираются на «Сегодня». */
-const CHECK_REAL = 5, CHECK_MADE = 3, CHECK_PASS = 7;
+   Минута в конце недели: 8 слов этой недели вразнобой, без столбика и его
+   шапки с гласной. Сначала — слова, которых не было в столбиках (только в
+   тренажёре), затем остальные слова недели с её новыми звуками. У каждого
+   есть запись, так что взрослый всегда может проверить. Выдуманные слова
+   были убраны: без записи родитель не мог понять, верно ли прочитано.
+   Порог — 7 из 8. За пройденную проверку — наклейка, зверь этой недели. */
+const CHECK_N = 8, CHECK_PASS = 7;
+// Объявлением функции, а не const-стрелкой: страницы строятся при загрузке
+// модуля раньше этих строк, и стрелка ещё была бы в «мёртвой зоне».
+function hasCheck(g){ return (g.kind === 'g' || g.kind === 'ph' || g.kind === 'me') && !!(g.cols || g.wall); }
 let checks = {}, stickers = new Set();
 const checkState = new Map();
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
@@ -725,7 +730,7 @@ const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 
 function saveChecks(){ LS.set('checks', checks); LS.set('stickers', [...stickers]); }
 
 function checkHTML(g){
-  if(!MADE_UP[g.id]) return '';
+  if(!hasCheck(g)) return '';
   return `<div class="card check" data-check="${g.id}">
   <h2 class="sec"><span class="emo">${ic('target')}</span> Проверка недели</h2>
   <div data-cbody></div></div>`;
@@ -736,18 +741,18 @@ function renderCheck(gid){
   const st = checkState.get(gid) || { phase: 'intro' };
   if(st.phase === 'intro'){
     const last = checks[gid];
-    box.innerHTML = `<p class="sub">Минута в конце недели. Ребёнок читает 8 слов без подсказки, вы отмечаете, верно ли. Три слова выдуманные — их нельзя узнать по памяти, только прочитать по звукам. Пройдено от ${CHECK_PASS} из 8 — ребёнок получает наклейку.</p>
+    box.innerHTML = `<p class="sub">Минута в конце недели. Ребёнок читает 8 слов этой недели вразнобой — без столбика и подсказки гласной. Вы отмечаете, верно ли; сомневаетесь — нажмите на значок звука рядом со словом. От ${CHECK_PASS} из 8 — наклейка на вкладке «Сегодня».</p>
     ${last ? `<p class="hint">Последний раз: ${last.score} из ${last.total}${stickers.has(gid) ? ' · наклейка получена' : ''}</p>` : ''}
     <div class="bar" style="justify-content:flex-start"><button class="btn" data-c="start">${ic('play')}Начать проверку</button></div>`;
   } else if(st.phase === 'run'){
     const it = st.items[st.i];
-    box.innerHTML = `<p class="cprog"><span>Слово ${st.i + 1} из ${st.items.length}</span>${it.made ? '<span class="tag">выдуманное</span>' : ''}</p>
-    <div class="cword"><div class="dbig en" data-cword>${esc(it.w)}</div>${it.made ? '' : `<button class="icn" data-c="say" aria-label="Послушать слово" title="Послушать">${ic('volume-2')}</button>`}</div>
+    box.innerHTML = `<p class="cprog"><span>Слово ${st.i + 1} из ${st.items.length}</span></p>
+    <div class="cword"><div class="dbig en" data-cword>${esc(it.w)}</div><button class="icn" data-c="say" aria-label="Послушать слово" title="Послушать">${ic('volume-2')}</button></div>
     <div class="bar">
       <button class="btn" data-c="ok">${ic('check')}Верно</button>
       <button class="btn soft" data-c="no">${ic('x')}Ошибся</button>
     </div>
-    <p class="hint">${it.made ? 'У выдуманного слова нет записи: читайте его по звукам, как написано.' : 'Сомневаетесь, как звучит слово, — нажмите на значок звука.'}</p>`;
+    <p class="hint">Сначала читает ребёнок, потом при необходимости слушаете запись. Не наоборот.</p>`;
     bump(box.querySelector('[data-cword]'));
   } else {
     const n = st.right.length, total = st.items.length;
@@ -757,21 +762,22 @@ function renderCheck(gid){
       : 'Пока рано идти дальше: ещё пару дней на столбиках и тренажёре этой недели.';
     box.innerHTML = `<p class="cscore ${pass ? 'pass' : ''}">${n} из ${total}</p>
     <p class="sub" style="margin-top:4px">${msg}</p>
-    ${st.wrong.length ? `<div class="trk" style="margin-top:12px"><span class="l">Ошибки</span>${st.wrong.map(it => it.made
-      ? `<span class="tw2 en">${esc(it.w)}</span>` : `<button class="tw2 en" data-say="${esc(it.w)}">${esc(it.w)}</button>`).join('')}</div>` : ''}
+    ${st.wrong.length ? `<div class="trk" style="margin-top:12px"><span class="l">Ошибки</span>${st.wrong.map(it => `<button class="tw2 en" data-say="${esc(it.w)}">${esc(it.w)}</button>`).join('')}</div>` : ''}
     <div class="bar" style="justify-content:flex-start"><button class="btn soft" data-c="start">${ic('rotate-ccw')}Пройти ещё раз</button></div>`;
   }
 }
 function startCheck(gid){
   const g = GROUPS.find(x => x.id === gid);
-  // Слова недели, где есть её новые звуки: иначе проверка второй недели
-  // спрашивала sit и nip — слова первой, которые просто повторены в столбиках.
-  const fresh = (g.sounds || []).map(([l]) => l.toLowerCase());
-  const all = weekWordsOf(g), withNew = all.filter(w => fresh.some(x => w.toLowerCase().includes(x)));
-  const src = withNew.length >= CHECK_REAL ? withNew : all;
-  const real = shuffle(src).slice(0, CHECK_REAL).map(w => ({ w, made: false }));
-  const made = shuffle(MADE_UP[gid]).slice(0, CHECK_MADE).map(w => ({ w, made: true }));
-  checkState.set(gid, { phase: 'run', items: shuffle([...real, ...made]), i: 0, right: [], wrong: [] });
+  const fresh = (g.sounds || []).map(([l]) => l.toLowerCase().replace(/_e$/, ''));
+  const inCols = new Set((g.cols || []).flatMap(c => c[2]));
+  const recorded = w => !MANIFEST || MANIFEST[w];
+  const withNew = w => g.id === 'me' ? /[aeiou][^aeiou]e$/.test(w) : fresh.some(x => w.toLowerCase().includes(x));
+  const all = weekWordsOf(g).filter(recorded);
+  const unseen = shuffle(all.filter(w => !inCols.has(w) && withNew(w))).slice(0, 3);
+  const rest = shuffle(all.filter(w => !unseen.includes(w) && withNew(w)));
+  const pad = shuffle(all.filter(w => !unseen.includes(w) && !rest.includes(w)));
+  const words = shuffle([...unseen, ...rest, ...pad].slice(0, CHECK_N));
+  checkState.set(gid, { phase: 'run', items: words.map(w => ({ w })), i: 0, right: [], wrong: [] });
   renderCheck(gid);
 }
 function answerCheck(gid, ok){
@@ -803,16 +809,28 @@ document.addEventListener('click', ev => {
 function celebrate(g){
   const o = document.createElement('div');
   o.className = 'celebrate'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Новая наклейка');
-  o.innerHTML = `<div class="cel-card">${art(g.art)}<p class="cel-k">Новая наклейка!</p><p class="cel-t">${esc(g.nav)} пройдена</p>
-    <button class="btn" data-cel>Ура!</button></div>`;
+  o.innerHTML = `<div class="cel-card">${art(g.art)}<p class="cel-k">Новая наклейка!</p><p class="cel-t">${esc(g.nav)} пройдена. Наклейка уже в коллекции на вкладке «Сегодня».</p>
+    <div class="bar"><button class="btn" data-cel="see">${ic('star')}Посмотреть</button><button class="btn soft sm" data-cel>Позже</button></div></div>`;
   document.body.appendChild(o);
   requestAnimationFrame(() => o.classList.add('on'));
   const close = () => { o.classList.remove('on'); setTimeout(() => o.remove(), 250); };
-  o.addEventListener('click', e => { if(e.target === o || e.target.closest('[data-cel]')) close(); });
+  o.addEventListener('click', e => {
+    const b = e.target.closest('[data-cel]');
+    if(e.target !== o && !b) return;
+    close();
+    if(b && b.dataset.cel === 'see'){
+      show('today');
+      // show() сам плавно уводит страницу наверх — прокручиваем к наклейкам после него
+      setTimeout(() => {
+        const k = document.querySelector('#x-today .kid'); if(!k) return;
+        window.scrollTo(0, k.getBoundingClientRect().top + window.scrollY - 110);
+      }, 700);
+    }
+  });
 }
 
 function kidHTML(){
-  const weeks = GROUPS.filter(g => MADE_UP[g.id]);
+  const weeks = GROUPS.filter(hasCheck);
   const n = fluent.size;
   return `<div class="card kid">
   <h2 class="sec"><span class="emo">${ic('star')}</span> Звёзды и наклейки</h2>
@@ -1142,7 +1160,7 @@ $('test').onclick = () => speak(EXTRA_SAY[0]);
   const s = LS.get('seen',{}); for(const k in s) seen[k]=new Set(s[k]);
   fluent = new Set(LS.get('fluent',[]));
   checks = LS.get('checks', {}); stickers = new Set(LS.get('stickers', []));
-  Object.keys(MADE_UP).forEach(renderCheck);
+  GROUPS.filter(hasCheck).forEach(g => renderCheck(g.id));
   audioOn = LS.get('audio',true);
   rate    = LS.get('rate',1);
   $('rate').value = Math.round(rate*100);
